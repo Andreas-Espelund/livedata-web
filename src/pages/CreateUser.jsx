@@ -1,13 +1,15 @@
-import React from 'react';
+import React, {useContext} from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '@/api/firebase.js'; // Update this path
 import {Input, Button, Card, CardFooter} from '@nextui-org/react';
 import {CardBody} from "@nextui-org/card";
+import {Navigate} from "react-router-dom";
+import {Context} from "@/App";
 
 const SignUpForm = () => {
     const { reset, control, handleSubmit, formState: { errors } } = useForm();
-
+    const {user} = useContext(Context)
     const onSubmit = async (data) => {
         const { email, password, verify } = data;
         console.log(email, password, verify)
@@ -27,6 +29,11 @@ const SignUpForm = () => {
             // Handle errors (e.g., email already in use, weak password)
         }
     };
+
+    if (user) {
+        return <Navigate to={"/"}/>
+    }
+
     return (
         <div className={"flex flex-col justify-center items-center h-[100dvh]  p-4 gap-6"}>
             <h1 className={"text-3xl font-medium"}>Registrer ny bruker</h1>

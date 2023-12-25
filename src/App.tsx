@@ -86,8 +86,7 @@ function App() {
     <>
       <Context.Provider value={{individuals, breeders, user}}>
         <NextUIProvider>
-        <main className={""}>
-          <TopNavBar/>
+        <main>
           <RouterProvider router={router}/>
         </main>
         </NextUIProvider>

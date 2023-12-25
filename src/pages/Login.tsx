@@ -1,17 +1,20 @@
-import React, {useState} from 'react';
+import React, {useContext, useState} from 'react';
 import {useForm, Controller, set} from 'react-hook-form';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '@/api/firebase.js'; // Update this path
-import {Input, Button, Card, CardFooter} from '@nextui-org/react';
+import {Input, Button, Card, CardFooter, user} from '@nextui-org/react';
 import {CardBody} from "@nextui-org/card";
-import {useNavigate} from "react-router-dom";
+import {Navigate, useNavigate} from "react-router-dom";
 import {NoticeBox} from "@/components/NoticeBox";
+import {Context} from "@/App";
 
 const LoginPage = () => {
     const { reset, control, handleSubmit, formState: { errors } } = useForm();
     const [error, setError] = useState(false)
     const [loading, setLoading] = useState(false)
     const navigate = useNavigate()
+
+    const {user} = useContext(Context)
     const onSubmit = async (data) => {
         setLoading(true)
         setError(false)
@@ -27,6 +30,10 @@ const LoginPage = () => {
             setLoading(false)
         }
     };
+
+    if (user) {
+        return <Navigate to={"/"}/>
+    }
     return (
         <div className={"flex flex-col justify-center items-center h-[100dvh]  p-4 gap-6"}>
             <h1 className={"text-3xl font-medium"}>Logg inn</h1>

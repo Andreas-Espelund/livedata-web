@@ -15,6 +15,7 @@ import {
 import { signOut } from 'firebase/auth';
 import { auth } from "@/api/firebase";
 import {Context} from "@/App"; // Update this path if necessary
+import { useLocation } from 'react-router-dom';
 
 
 const menuItems = [
@@ -30,7 +31,7 @@ const menuItems = [
 export default function TopNavBar() {
 
     const { user } = useContext(Context)
-
+    const location = useLocation();
 
     const logout = () => {
         signOut(auth).then(() => {
@@ -41,10 +42,13 @@ export default function TopNavBar() {
         });
     };
 
-    const hidden = window.location.pathname === "/signup" || window.location.pathname === "/login"
+    if (location.pathname === '/signup' || location.pathname === '/login') {
+        return null; // Return null to render nothing
+    }
 
     return (
-        <Navbar isBordered className={`bg-primary text-white ${hidden ? "hidden" : ""}`} aria-label={""}>
+        <Navbar isBordered className={`bg-primary text-white`} aria-label={""}>
+
             <NavbarBrand>
                 <a href={"/"} className={"flex gap-4"}>
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"

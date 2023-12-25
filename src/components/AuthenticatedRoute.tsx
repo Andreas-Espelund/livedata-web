@@ -3,6 +3,7 @@ import firebase from "firebase/compat";
 import { User } from "firebase/auth";
 import {useContext} from "react";
 import {Context} from "@/App";
+import TopNavBar from "@/components/Navbar";
 
 
 interface AuthenticatedRouteProps{
@@ -16,7 +17,12 @@ const AuthenticatedRoute = ({ user, element }: AuthenticatedRouteProps) => {
     }
 
     // User is authenticated, render the requested route
-    return element;
+    return (
+        <div>
+            <TopNavBar/>
+            {element}
+        </div>
+    )
 };
 
 export default AuthenticatedRoute
