@@ -41,7 +41,7 @@ const Message: React.FC<MessageProps> = ({text, variant, onClose}) => {
         <div className={`rounded-lg p-4 ${bgColor}`}>
             <div className="flex items-center justify-between">
                 <p className="text-white mr-4">{text}</p>
-                <Button isIconOnly={true} onClick={onClose} color={"none"}>
+                <Button isIconOnly={true} onPress={onClose} color={"none"}>
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5}
                          stroke="white" className="w-6 h-6">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/>

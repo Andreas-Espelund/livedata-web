@@ -73,7 +73,7 @@ export function NoticeBox({title, message, type}: {
                     <p className={"text-small"}>{message}</p>
                 </div>
 
-                <Button isIconOnly variant={"light"} className={`ml-auto ${color}`} onClick={handleClose}>
+                <Button isIconOnly variant={"light"} className={`ml-auto ${color}`} onPress={handleClose}>
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5}
                          stroke="currentColor" className="w-6 h-6">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12"/>

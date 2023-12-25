@@ -13,7 +13,7 @@ interface NavigationCardProps {
 export default function NavigationCard({title, subtitle, image, alt, href}: NavigationCardProps){
     return (
         <a href={href} className={"cursor-pointer hover:scale-[102%] focus:scale-[102%] active:scale-[99%] hover:outline-primary focus:outline-primary transition-all rounded-[16px]"}>
-            <Card className="py-4">
+            <Card className="py-4 max-w-[400px]">
                 <CardHeader className="pb-0 pt-2 px-4 flex-col items-start">
                     <p className="text-tiny uppercase font-bold">{subtitle}</p>
                     <h4 className="font-bold text-xl">{title}</h4>
@@ -21,9 +21,8 @@ export default function NavigationCard({title, subtitle, image, alt, href}: Navi
                 <CardBody className="overflow-visible py-2">
                     <Image
                         alt={alt}
-                        className="object-cover rounded-xl aspect-[1.2]"
+                        className="object-cover rounded-xl w-full flex aspect-[1.2]"
                         src={image}
-                        width={300}
                     />
                 </CardBody>
             </Card>

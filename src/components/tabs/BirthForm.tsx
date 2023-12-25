@@ -205,7 +205,7 @@ const BirthForm = () => {
 
 
                                 <Tooltip content={removable ? "Fjern lam fra listen" : "Lammingen må ha minst ett lam"}>
-                                    <Button onClick={() => remove(index)}
+                                    <Button onPress={() => remove(index)}
                                             color="danger"
                                             variant="flat" isIconOnly
                                             disabled={!removable}>
@@ -238,7 +238,7 @@ const BirthForm = () => {
 
 
                         <div className="flex gap-4 justify-end w-full">
-                            <Button variant="faded" color="primary" onClick={(e) => addLamb()}>
+                            <Button variant="faded" color="primary" onPress={(e) => addLamb()}>
                                 Legg til lam
                             </Button>
 

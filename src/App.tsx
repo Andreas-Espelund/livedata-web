@@ -16,6 +16,7 @@ import { User } from "firebase/auth";
 import AuthenticatedRoute from "@/components/AuthenticatedRoute";
 import {Spinner} from "@nextui-org/react";
 import {getAllIndividuals} from "@/api/firestore";
+import Info from "@/pages/Info";
 
 export const Context = createContext<ContextType>({individuals: [], breeders: [], user: undefined});
 
@@ -80,6 +81,10 @@ function App() {
     {
       path: '/login',
       element: <LoginPage/>
+    },
+    {
+      path: '/info',
+      element: <Info/>
     }
   ])
   return (

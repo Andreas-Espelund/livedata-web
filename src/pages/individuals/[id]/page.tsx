@@ -56,7 +56,7 @@ export default function page({params}: { params: { id: number } }) {
         <div className={"w-2/3 m-auto"}>
             <Container>
                 <Button
-                    onClick={() => window.history.back()}
+                    onPress={() => window.history.back()}
                     variant={"light"}
                     startContent={
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"

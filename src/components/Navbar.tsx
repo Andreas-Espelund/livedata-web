@@ -9,13 +9,14 @@ import {
     Navbar,
     NavbarBrand,
     NavbarContent,
-    NavbarItem
+    NavbarItem, User
 } from "@nextui-org/react";
 
 import { signOut } from 'firebase/auth';
 import { auth } from "@/api/firebase";
 import {Context} from "@/App"; // Update this path if necessary
 import { useLocation } from 'react-router-dom';
+import {BoltIcon, GearIcon, InfoIcon, LogoutIcon, PersonIcon} from "@/images/icons";
 
 
 const menuItems = [
@@ -73,17 +74,19 @@ export default function TopNavBar() {
             <NavbarContent justify={"end"}>
                 <Dropdown>
                     <DropdownTrigger>
-                        <Avatar/>
+                        <Avatar fallback={<PersonIcon/>}/>
                     </DropdownTrigger>
                     <DropdownMenu aria-label={"user-menu"}>
-                        <DropdownItem key="profile" className="h-14 gap-2" textValue={"email"}>
-                            <p className="font-semibold">Logga inn som</p>
-                            <p className="font-semibold">{user?.email}</p>
+                        <DropdownItem isReadOnly key="profile" className="h-14 gap-2 cursor-default" textValue={"email"}>
+                            <User
+                                description={"Logget inn"}
+                                name={user?.email}
+                                avatarProps={{fallback:<PersonIcon/>, color: "primary"}}
+                            />
                         </DropdownItem>
-                        <DropdownItem> Innstillinger </DropdownItem>
-                        <DropdownItem> Info / oppdateringer </DropdownItem>
-                        <DropdownItem> Hjelp og kontakt </DropdownItem>
-                        <DropdownItem onClick={logout} color={"danger"} className={"text-danger"}>
+                        <DropdownItem startContent={<GearIcon/>}> Innstillinger </DropdownItem>
+                        <DropdownItem startContent={<InfoIcon/>}> <a href={"/info"}> Hjelp og info</a></DropdownItem>
+                        <DropdownItem startContent={<LogoutIcon/>} onPress={logout} color={"danger"} className={"text-danger"}>
                             Logg ut
                         </DropdownItem>
                     </DropdownMenu>
