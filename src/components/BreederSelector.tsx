@@ -16,14 +16,14 @@ export const BreederSelector = ({label, field}: {
             value={field?.value}
             onSelectionChange={(e) => field.onChange(e)}
         >
-            {breeders.map(item =>
+            {breeders.filter(e => e.status === "active").map(item =>
                 <AutocompleteItem
                     key={item.id}
-                    textValue={`${item.nickname} (${item.tag})`}
+                    textValue={`${item.nickname} (${item.id})`}
                 >
                     <div>
                         <p className={"text-md font-semibold"}>{item.nickname}</p>
-                        <p className={"text-sm"}>{item.tag}</p>
+                        <p className={"text-sm"}>{item.id}</p>
                     </div>
                 </AutocompleteItem>
             )}

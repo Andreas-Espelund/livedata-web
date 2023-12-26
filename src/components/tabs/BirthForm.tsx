@@ -10,7 +10,7 @@ import {
     PopoverTrigger,
     Textarea,
     Tooltip,
-    Image
+    Image, CardFooter
 } from "@nextui-org/react";
 import {Stack} from "@/components/Layout";
 import {Controller, useFieldArray, useForm} from "react-hook-form";
@@ -20,6 +20,8 @@ import {GenderSelector} from "@/components/GenderSelector";
 import {Heading2, Heading4} from "@/components/Headings";
 import {CardHeader} from "@nextui-org/card";
 import {BreederSelector} from "@/components/BreederSelector";
+import {NoticeBox} from "@/components/NoticeBox";
+import NoticeWrapper from "@/components/NoticeWrapper";
 
 const formatDate = (date) => {
     let d = new Date(date),
@@ -81,6 +83,7 @@ const BirthForm = () => {
 
     return (
         <Card>
+
             <CardHeader className={"flex justify-between"}>
                 <Heading2>Ny Lamming</Heading2>
                 <Popover placement="right-end">
@@ -120,7 +123,7 @@ const BirthForm = () => {
                             defaultValue=""
                             rules={{required: true}}
                             render={({field}) => (
-                                <IndividualSelector label="Mor sin ID" field={field}/>
+                                <IndividualSelector label="Mor sin ID" field={field} gender={"female"}/>
                             )}
                         />
 
@@ -238,19 +241,23 @@ const BirthForm = () => {
 
 
                         <div className="flex gap-4 justify-end w-full">
-                            <Button variant="faded" color="primary" onPress={(e) => addLamb()}>
+
+                            <Button  isDisabled={true} variant="faded" color="primary" onPress={(e) => addLamb()}>
                                 Legg til lam
                             </Button>
 
-                            <Button type="submit" color="primary" isDisabled={!isValid}>
+                            <Button  type="submit" color="primary" isDisabled={true}>
                                 Registrer individ
                             </Button>
                         </div>
 
-
                     </Stack>
+
                 </form>
             </CardBody>
+            <NoticeWrapper>
+                <NoticeBox title={"Ikkje fungerende"} message={"Dette skjemaet er i arbeid"} type={"warning"}  noTimeout/>
+            </NoticeWrapper>
         </Card>
     )
 }

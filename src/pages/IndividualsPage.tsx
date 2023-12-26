@@ -61,8 +61,6 @@ export default function IndividualsPage() {
     });
 
 
-    console.log("individuals")
-    console.log(individuals)
 
 
     const headerColumns = React.useMemo(() => {
@@ -93,7 +91,6 @@ export default function IndividualsPage() {
         filteredUsers = filteredUsers.filter(ind => {
             let year = Number(ind.birth_date.slice(0, 4))
             if (year < 1) year = currentYear
-            console.log(year, range)
             return year >= range[0] && year <= range[1]
 
         })
@@ -209,7 +206,6 @@ export default function IndividualsPage() {
 
     const onRowsPerPageChange = React.useCallback((selectedKeys: Selection) => {
         const selectedValue = Array.from(selectedKeys)[0];
-        console.log(selectedValue);
         setRowsPerPage(Number(selectedValue));
         setPage(1);
     }, []);
@@ -372,7 +368,7 @@ export default function IndividualsPage() {
     }, [selectedKeys, items.length, page, pages, hasSearchFilter]);
 
     return (
-        <div className="w-full lg:w-4/5 m-auto p-4">
+        <div className="w-full lg:w-4/5 m-auto p-8">
             <Table
                 aria-label="Example table with custom cells, pagination and sorting"
                 isHeaderSticky

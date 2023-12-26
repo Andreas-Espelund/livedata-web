@@ -1,6 +1,6 @@
 import React, {useContext, useState} from "react";
 import {Controller, useForm} from "react-hook-form";
-import {Button, Card, CardBody, Input} from "@nextui-org/react";
+import {Button, Card, CardBody, Checkbox, Input} from "@nextui-org/react";
 import {Stack} from "@/components/Layout";
 import {Heading2} from "@/components/Headings";
 import {IndividualSelector} from "@/components/IndividualSelector";
@@ -12,21 +12,28 @@ import {NoticeBox} from "@/components/NoticeBox";
 import {formatDate} from "@/api/utils";
 import {addIndividual} from "@/api/firestore";
 import {Context} from "@/App";
+import firebase from "firebase/compat";
 
 const RegisterIndividualForm = () => {
     const {handleSubmit, control, formState: {isValid}} = useForm({
-        mode: 'onChange', // Validate the form on each change
+        mode: 'onBlur', // Validate the form on each change
         defaultValues: {
-            date: formatDate(new Date())
+            date: formatDate(new Date()),
+            gender: "female",
+            father: null,
+            mother: null,
+            bottle: false
         }
     });
 
     const {user} = useContext(Context)
-
+    const [loading, setLoading] = useState(false)
     const [success, setSuccess] = useState(false)
     const [error, setError] = useState(false)
 
     const onSubmit = async (data) => {
+
+        setLoading(true)
         console.log("FORMDATA", data);
         // You can perform further actions here, like sending the data to the server
 
@@ -34,7 +41,7 @@ const RegisterIndividualForm = () => {
             id: data.id,
             mother: data.mother,
             father: data.father,
-            bottle: false,
+            bottle: data.bottle,
             status: "active",
             birth_date: data.date,
             gender: data.gender
@@ -42,6 +49,12 @@ const RegisterIndividualForm = () => {
         if (user) {
             console.log('submitting')
             await addIndividual(user.uid,ind)
+                .then(res => setSuccess(true))
+                .catch(err => {console.error(err); setError(true)})
+                .finally(() => setLoading(false))
+        } else {
+            setError(true)
+            setLoading(false)
         }
     };
 
@@ -58,57 +71,80 @@ const RegisterIndividualForm = () => {
                             <Controller
                                 name="id"
                                 control={control}
-                                defaultValue=""
-                                rules={{required: true}}
-                                render={({field}) => (
-                                    <Input {...field} type="number" label="ID (Øremerkenummer)"/>
+                                rules={{
+                                    required: "ID is required",
+                                    pattern: {
+                                        value: /^\d{5}$/,
+                                        message: "ID må være 5-sifret tall"
+                                    }
+                                }}
+                                render={({field, fieldState}) => (
+                                    <Input {...field} type="number" label="ID (Øremerkenummer)" errorMessage={fieldState.error?.message}/>
                                 )}
                             />
 
-                            <Controller
-                                name="date"
-                                control={control}
-                                defaultValue=""
-                                rules={{required: true}}
-                                render={({field}) => (
-                                    <Input {...field} type="date" placeholder=" " label="Fødtselsdato"/>
-                                )}
-                            />
 
                             <Controller
                                 name="mother"
                                 control={control}
-                                defaultValue=""
-                                //rules={{required: true}}
-                                render={({field}) => (
-                                    <IndividualSelector label="Mor sin ID" field={field} ewe={true}/>
+                                rules={{
+                                    pattern: {
+                                        value: /^\d{5}$/,
+                                        message: "ID må være 5-sifret tall"
+                                    }
+                                }}
+                                render={({field,fieldState}) => (
+                                    <Input label="Mor sin ID" {...field} errorMessage={fieldState.error?.message}/>
                                 )}
                             />
 
                             <Controller
                                 name="father"
                                 control={control}
-                                defaultValue=""
-                                //rules={{required: true}}
-                                render={({field}) => (
-                                    <IndividualSelector label="Far sin ID" field={field} ewe={false}/>
+                                rules={{
+                                    pattern: {
+                                        value: /^\d{5}$/,
+                                        message: "ID må være 5-sifret tall"
+                                    }
+                                }}
+                                render={({field, fieldState}) => (
+                                    <Input label="Far sin ID" {...field} errorMessage={fieldState.error?.message}/>
                                 )}
                             />
 
                             <Controller
+                                name="date"
+                                control={control}
+                                rules={{required: true}}
+                                render={({field}) => (
+                                    <Input {...field} type="date" placeholder=" " label="Fødtselsdato"/>
+                                )}
+                            />
+
+
+                            <Controller
                                 name="gender"
                                 control={control}
-                                defaultValue=""
                                 rules={{required: true}}
                                 render={({field}) => (
 
                                     <GenderSelector field={field}/>
                                 )}
                             />
+
+                            <Controller
+                                name="bottle"
+                                control={control}
+                                render={({field}) => (
+                                    <label className={"text-sm flex items-center text-zinc-600"}>
+                                        <Checkbox {...field} size={"lg"} />
+                                        Kopplam?
+                                    </label>
+                                )}
+                            />
                             <Button type="submit" color="primary" className={"ml-auto"} isDisabled={!isValid}>
                                 Registrer individ
                             </Button>
-
                         </Stack>
                     </form>
                 </CardBody>

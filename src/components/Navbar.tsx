@@ -14,7 +14,7 @@ import {
 
 import { signOut } from 'firebase/auth';
 import { auth } from "@/api/firebase";
-import {Context} from "@/App"; // Update this path if necessary
+import {Context} from "@/App";
 import { useLocation } from 'react-router-dom';
 import {BoltIcon, GearIcon, InfoIcon, LogoutIcon, PersonIcon} from "@/images/icons";
 
@@ -27,6 +27,10 @@ const menuItems = [
     {
         label: "Registrering",
         path: "/register"
+    },
+    {
+        label: "Veirar",
+        path: "/bucks"
     },
 ];
 export default function TopNavBar() {

@@ -1,17 +1,18 @@
 import {Autocomplete, AutocompleteItem} from "@nextui-org/react";
 import React from "react";
 
-export const GenderSelector = ({field, className}: {
+
+interface GenderSelectorProps {
     field: any,
-    className: string | undefined
-}) => {
+}
+export const GenderSelector = ({field}: GenderSelectorProps) => {
 
     return (
         <Autocomplete
             value={field.value}
-            className={className}
             label={"Velg kjønn"}
             onSelectionChange={(e) => field.onChange(e)}
+            defaultSelectedKey={field.value}
         >
             <AutocompleteItem
                 textValue="Søye"

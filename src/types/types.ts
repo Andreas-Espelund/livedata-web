@@ -6,11 +6,14 @@ export type Individual = {
     bottle?: boolean;
     mother?: string;
     father?: string;
+    doc: string;
 };
 
 
 export type Breeder = {
     id: string,
     nickname: string,
-    tag: string
+    birth_date: string,
+    status: string,
+    doc: string
 }

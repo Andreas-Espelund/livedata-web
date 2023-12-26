@@ -2,12 +2,18 @@ import {Navbar} from "@nextui-org/react";
 import {useLocation} from "react-router-dom";
 import TopNavBar from "@/components/Navbar";
 
-const MainLayout = ({children}) => {
+import { Outlet } from "react-router-dom";
 
+
+const MainLayout = () => {
+
+    console.log("MAIN LAYOUT")
     return (
         <>
-            <TopNavBar/>
-            {children}
+            <p>
+                top navigation
+            </p>
+            <Outlet/>
         </>
     )
 }

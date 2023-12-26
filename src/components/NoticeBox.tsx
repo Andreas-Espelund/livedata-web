@@ -2,23 +2,26 @@ import {Button, Card} from "@nextui-org/react";
 import {useEffect, useState} from "react";
 import "./NoticeBox.css"
 
-export function NoticeBox({title, message, type}: {
+export function NoticeBox({title, message, type, noTimeout = false}: {
     title: string,
     message: string,
-    type: "warning" | "danger" | "info" | "success"
+    type: "warning" | "danger" | "info" | "success",
+    noTimeout: boolean
 }) {
 
     const [isVisible, setIsVisible] = useState(true);
     const [animationClass, setAnimationClass] = useState("noticeBox-enter");
 
     useEffect(() => {
-        const timer = setTimeout(() => {
-            setAnimationClass("noticeBox-exit");
-            setTimeout(() => setIsVisible(false), 500); // Corresponds to animation duration
-        }, 8000);
+        if (!noTimeout) {
+            const timer = setTimeout(() => {
+                setAnimationClass("noticeBox-exit");
+                setTimeout(() => setIsVisible(false), 500); // Corresponds to animation duration
+            }, 8000);
 
-        return () => clearTimeout(timer);
-    }, []);
+            return () => clearTimeout(timer);
+        }
+    }, [noTimeout]);
 
     const handleClose = () => {
         setAnimationClass("noticeBox-exit");

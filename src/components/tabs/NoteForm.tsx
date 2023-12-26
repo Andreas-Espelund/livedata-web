@@ -1,10 +1,12 @@
 import React from "react";
 import {Controller, useForm} from "react-hook-form";
-import {Button, Textarea, Image} from "@nextui-org/react";
+import {Button, Textarea, Image, CardFooter} from "@nextui-org/react";
 import {Card, CardBody, CardHeader} from "@nextui-org/card";
 import {Row, Stack} from "@/components/Layout";
 import {Heading2} from "@/components/Headings";
 import {IndividualSelector} from "@/components/IndividualSelector";
+import {NoticeBox} from "@/components/NoticeBox";
+import NoticeWrapper from "@/components/NoticeWrapper";
 
 const individualOptions = [
     {value: 1, label: "10010"},
@@ -59,12 +61,15 @@ const NoteForm = () => {
                                 />
                             )}
                         />
-                        <Button type="submit" color="primary" className={"ml-auto"}>
+                        <Button isDisabled type="submit" color="primary" className={"ml-auto"}>
                             Legg til notat
                         </Button>
                     </Stack>
                 </form>
             </CardBody>
+            <NoticeWrapper>
+                <NoticeBox title={"Ikkje fungerende"} message={"Dette skjemaet er i arbeid"} type={"warning"}  noTimeout/>
+            </NoticeWrapper>
         </Card>
     );
 };
