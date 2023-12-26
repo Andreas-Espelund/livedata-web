@@ -7,12 +7,10 @@ import {Heading2} from "@/components/Headings";
 import {Input} from "@nextui-org/input";
 import {IndividualSelector} from "@/components/IndividualSelector";
 import {formatDate} from "@/api/utils";
-import {deactivateIndividual} from "@/api/pocketbaseService";
 import {updateIndividualStatus} from "@/api/firestore";
 import {Context} from "@/App";
 import NoticeWrapper from "@/components/NoticeWrapper";
 import {Simulate} from "react-dom/test-utils";
-import error = Simulate.error;
 import {NoticeBox} from "@/components/NoticeBox";
 
 const individualOptions = [
@@ -29,19 +27,28 @@ const DeactivationForm = () => {
     const [failure, setFailure]  = useState(false)
     const [loading, setLoading] = useState(false)
 
-    const {handleSubmit, control, setValue} = useForm({
+    const {handleSubmit, control, setValue, reset} = useForm({
         mode: 'onChange',
         defaultValues: {
-            date: formatDate(new Date())
+            date: formatDate(new Date()),
+            id: "",
+            status: "slaught"
         }
     });
 
     const onSubmit = (data) => {
         setLoading(true)
-        updateIndividualStatus(user?.uid, data.id, "inactive")
-            .then((data) => setSuccess(true))
-            .catch((err) => {setFailure(true); console.error(err)})
-            .finally(() => setLoading(false))
+        try {
+            const doc = individuals.filter(e => e.id === data.id)[0].doc
+            updateIndividualStatus(user.uid, doc, data.status)
+            setSuccess(true)
+            reset()
+        } catch (error){
+            console.error(error)
+            setFailure(true)
+        } finally {
+            setLoading(false)
+        }
     };
 
     return (
@@ -78,46 +85,47 @@ const DeactivationForm = () => {
                         />
 
                         <Controller
-                            name="reason"
+                            name="status"
                             control={control}
                             rules={{required: true}}
                             render={({field}) => (
                                 <Autocomplete
                                     value={field?.value}
                                     onSelectionChange={(e) => field.onChange(e)}
+                                    defaultSelectedKey={field?.value}
                                     label="Årsak"
                                 >
-                                    <AutocompleteItem key={0}>
+                                    <AutocompleteItem key={"lost_in"}>
                                         Tapt innmark
                                     </AutocompleteItem>
-                                    <AutocompleteItem key={1}>
+                                    <AutocompleteItem key={"lost_out"}>
                                         Tapt utmark
                                     </AutocompleteItem>
-                                    <AutocompleteItem key={2}>
+                                    <AutocompleteItem key={"slaught"}>
                                         Slakt
                                     </AutocompleteItem>
-                                    <AutocompleteItem key={3}>
+                                    <AutocompleteItem key={"slaught_home"}>
                                         Slakt heime
                                     </AutocompleteItem>
-                                    <AutocompleteItem key={4}>
+                                    <AutocompleteItem key={"euthanized"}>
                                         Avlivet
                                     </AutocompleteItem>
-                                    <AutocompleteItem key={5}>
+                                    <AutocompleteItem key={"inactive"}>
                                         Annet
                                     </AutocompleteItem>
                                 </Autocomplete>
                             )}
                         />
 
-                        <Button isDisabled type="submit" color="danger" className={"ml-auto"} isLoading={loading}>
+                        <Button type="submit" color="danger" className={"ml-auto"} isLoading={loading}>
                             Bekreft utmelding
                         </Button>
                     </Stack>
                 </form>
             </CardBody>
-            <NoticeWrapper>
-                <NoticeBox title={"Ikkje fungerende"} message={"Dette skjemaet er i arbeid"} type={"warning"}  noTimeout/>
-            </NoticeWrapper>
+            {/*<NoticeWrapper>*/}
+            {/*    <NoticeBox title={"Ikkje fungerende"} message={"Dette skjemaet er i arbeid"} type={"warning"}  noTimeout/>*/}
+            {/*</NoticeWrapper>*/}
         </Card>
 
             <NoticeWrapper>

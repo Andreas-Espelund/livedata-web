@@ -37,6 +37,7 @@ function App() {
     if (user){
       getAllIndividuals(user.uid).then(res => {
         console.log("Fetching individuals")
+        console.log(res)
         setIndividuals(res)
 
       })

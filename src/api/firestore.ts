@@ -13,6 +13,7 @@ export const addIndividual = async (userId, individual) => {
 
 export const updateIndividualStatus = async (userId: string, docId: string, newStatus: string) => {
     const indDocRef = doc(db, "users", userId, "individuals", docId)
+
     await updateDoc(indDocRef, { status : newStatus})
 }
 

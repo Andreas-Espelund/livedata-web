@@ -1,5 +1,6 @@
 import React, {useContext} from "react";
 import {
+    AutocompleteItem,
     Button,
     Chip,
     Dropdown,
@@ -34,6 +35,15 @@ const columns = [
     {name: "KOPP", uid: "bottle", sortable: true},
     {name: "VALG", uid: "actions"},
 ];
+
+const statusMap = {
+    "active": "Aktiv",
+    "lost_in": "Tapt innmark",
+    "lost_out": "Tapt utmark",
+    "slaught": "Slakt",
+    "euthanized": "Avlivet",
+    "inactive": "Inaktiv"
+}
 
 
 const capitalize = (str: string) => {
@@ -144,7 +154,7 @@ export default function IndividualsPage() {
                 return (
                     <Chip className="capitalize" color={cellValue === "active" ? 'success' : 'danger'} size="sm"
                           variant="flat">
-                        {cellValue === "active" ? "Aktiv" : "Utmeldt"}
+                        {statusMap[cellValue]}
                     </Chip>
                 );
             case "actions":
