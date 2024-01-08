@@ -19,7 +19,7 @@ export default function RegistrationPage() {
 
     const { size } =useContext(Context)
     return (
-        <div className="w-full lg:w-4/5 m-auto p-8">
+        <div className="w-full lg:w-4/5 m-auto p-4 sm:p-8">
                 <Stack gap={"medium"}>
                     <Heading1>Registering</Heading1>
                     <Container padding={"none"}>

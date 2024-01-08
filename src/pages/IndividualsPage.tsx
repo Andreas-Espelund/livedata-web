@@ -466,7 +466,7 @@ export default function IndividualsPage() {
 
 
     return (
-        <div className="w-full lg:w-4/5 m-auto p-8 border-2">
+        <div className="w-full lg:w-4/5 m-auto p-4 sm:p-8 ">
 
             <Table
                 aria-label="Example table with custom cells, pagination and sorting"
