@@ -1,4 +1,4 @@
-import React from 'react'
+import React, {useContext} from 'react'
 import {Tab, Tabs} from "@nextui-org/react";
 
 import BirthForm from "../components/tabs/BirthForm";
@@ -9,6 +9,7 @@ import DeactivationForm from "../components/tabs/DeactivationForm";
 import NoteForm from '../components/tabs/NoteForm';
 import {Warning} from "postcss";
 import {WarningIcon} from "@/images/icons";
+import {Context} from "@/App";
 
 
 
@@ -16,12 +17,14 @@ import {WarningIcon} from "@/images/icons";
 
 export default function RegistrationPage() {
 
+    const { size } =useContext(Context)
     return (
         <div className="w-full lg:w-4/5 m-auto p-8">
                 <Stack gap={"medium"}>
                     <Heading1>Registering</Heading1>
                     <Container padding={"none"}>
                         <Tabs
+                            size={size}
                             defaultSelectedKey={localStorage.getItem("selected_tab") || undefined}
                             onSelectionChange={(key) => localStorage.setItem("selected_tab", key.toString())}
                         >

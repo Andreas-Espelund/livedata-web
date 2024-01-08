@@ -19,6 +19,8 @@ import {getAllIndividuals, getBreeders} from "@/api/firestore";
 import Info from "@/pages/Info";
 import Bucks from "@/pages/Bucks";
 import MainLayout from "@/components/MainLayout";
+import ForgotPassword from "@/pages/ForgotPassword";
+import SettingsPage from "@/pages/SettingsPage";
 
 export const Context = createContext<ContextType>({individuals: [], breeders: [], user: undefined});
 
@@ -27,12 +29,40 @@ interface ContextType {
   breeders: Breeder[];
   user: User | undefined;
   getIndividual: (doc: string)=>Individual | undefined;
+  size: "sm" | "md" | "lg";
 }
 function App() {
   const [individuals, setIndividuals] = useState<Individual[]>([])
   const [breeders, setBreeders] = useState<Breeder[]>([])
   const [user, setUser] = useState<User>(undefined)
   const [isLoading, setIsLoading] = useState(true); // Loading state
+  const [size, setScreenSize] = useState<"sm" | "md" | "lg">("md")
+
+
+  useEffect(() => {
+    const updateScreenSize = () => {
+      // Add logic to determine screen size based on window.innerWidth
+      // You can use window.innerWidth and define your own breakpoints.
+      if (window.innerWidth < 640) {
+        setScreenSize('sm');
+      } else if (window.innerWidth < 1024) {
+        setScreenSize('md');
+      } else {
+        setScreenSize('lg');
+      }
+    };
+
+    // Initial screen size update
+    updateScreenSize();
+
+    // Listen for window resize events
+    window.addEventListener('resize', updateScreenSize);
+
+    // Cleanup the event listener when the component unmounts
+    return () => {
+      window.removeEventListener('resize', updateScreenSize);
+    };
+  }, []);
 
 
   const getIndividual = (doc: string): Individual | undefined => {
@@ -90,17 +120,25 @@ function App() {
       element: <LoginPage/>
     },
     {
+      path: '/forgot',
+      element: <ForgotPassword/>
+    },
+    {
       path: '/info',
       element: <Info/>
     },
     {
       path: '/bucks',
       element: <AuthenticatedRoute user={user} element={<Bucks/>}/>
+    },
+    {
+      path: '/settings',
+      element: <AuthenticatedRoute user={user} element={<SettingsPage/>}/>
     }
   ])
   return (
 
-      <Context.Provider value={{individuals, breeders, user, getIndividual}}>
+      <Context.Provider value={{individuals, breeders, user, getIndividual, size}}>
         <NextUIProvider>
           <RouterProvider router={router}/>
         </NextUIProvider>

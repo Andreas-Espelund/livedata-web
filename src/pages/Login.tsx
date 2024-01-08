@@ -59,10 +59,12 @@ const LoginPage = () => {
                         <Button isLoading={loading} type="submit" color={"primary"}>Logg inn</Button>
                     </form>
                 </CardBody>
-                <CardFooter>
-                    <a className={"m-auto italic"} href={"/signup"}> Registrer bruker</a>
-                </CardFooter>
             </Card>
+
+            <div className={"grid gap-2"}>
+                <a className={"m-auto italic"} href={"/signup"}> Registrer bruker</a>
+                <a className={"m-auto italic"} href={"/forgot"}> Glemt passord?</a>
+            </div>
 
             <div className={"fixed top-10  flex right-4"}>
                 {error && <NoticeBox title={"Kunne ikkje logge inn"} message={"Sjekk at passord og brukernavn er riktig"} type={"warning"}/>}

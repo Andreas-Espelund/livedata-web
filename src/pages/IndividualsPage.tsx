@@ -322,77 +322,77 @@ export default function IndividualsPage() {
         return (
             <div className="flex flex-col gap-4">
                 <Heading1>Besetning</Heading1>
-                <div className="flex flex-col md:flex-row md:items-end  gap-4" suppressHydrationWarning>
+                <div className="flex flex-col md:flex-row md:items-end justify-between gap-4" suppressHydrationWarning>
                     <Input
                         variant={"bordered"}
                         isClearable
-                        className="w-full sm:max-w-[44%]"
+                        className="w-full sm:max-w-[30%]"
                         placeholder="Søk etter øremerke"
                         startContent={<SearchIcon/>}
                         value={filterValue}
                         onClear={() => onClear()}
                         onValueChange={onSearchChange}
                     />
-                    <Slider
-                        className={"max-w-[200px]"}
-                        label="Filtrer alder"
-                        step={1}
-                        minValue={currentYear - 10}
-                        maxValue={currentYear}
-                        defaultValue={ageFilter}
-                        formatOptions={{useGrouping: false}}
-                        onChange={(e) => { Array.isArray(e) ?setAgeFilter(e) : setAgeFilter(Array.from(e) )}}
-                    />
-
-                    <ButtonGroup variant={"flat"}>
-                        <Dropdown>
-                            <DropdownTrigger>
-                                <Button>
-                                    Kjønn
-                                </Button>
-                            </DropdownTrigger>
-                            <DropdownMenu aria-label={"gender selector"} disallowEmptySelection selectedKeys={genderFilter} selectionMode={"multiple"} onSelectionChange={(k) => setGenderFilter(k)}>
-                                <DropdownItem key={"female"}>Søye</DropdownItem>
-                                <DropdownItem key={"male"}>Veir</DropdownItem>
-                            </DropdownMenu>
-                        </Dropdown>
-                        <Dropdown>
-                            <DropdownTrigger>
-                                <Button>
-                                    Status
-                                </Button>
-                            </DropdownTrigger>
-                            <DropdownMenu aria-label={"status selector"} disallowEmptySelection selectedKeys={activeFilter} selectionMode={"multiple"} onSelectionChange={(k) => setActiveFilter(k) }>
-                                <DropdownItem key={"active"}>Aktive</DropdownItem>
-                                <DropdownItem key={"inactive"}>Inaktive</DropdownItem>
-                            </DropdownMenu>
-                        </Dropdown>
-                        <Dropdown>
-                            <DropdownTrigger className="hidden sm:flex">
-                                <Button>
-                                    Kolonner
-                                </Button>
-                            </DropdownTrigger>
-                            <DropdownMenu
-                                disallowEmptySelection
-                                aria-label="Table Columns"
-                                closeOnSelect={false}
-                                selectedKeys={visibleColumns}
-                                selectionMode="multiple"
-                                onSelectionChange={setVisibleColumns}
-                            >
-                                {columns.map((column) => (
-                                    <DropdownItem key={column.uid} className="capitalize">
-                                        {capitalize(column.name)}
-                                    </DropdownItem>
-                                ))}
-                            </DropdownMenu>
-                        </Dropdown>
-                    </ButtonGroup>
-
-                    <Button isDisabled={keyArray.length === 0} onPress={onOpen} className={"ml-auto"} variant={"shadow"} size={"lg"} color={"primary"} startContent={<PlusIcon/>}>
-                        Medisin
-                    </Button>
+                    <div className={"flex flex-col md:flex-row gap-4 items-end"}>
+                        <Slider
+                            className={"md:max-w-[180px]"}
+                            label="Filtrer alder"
+                            step={1}
+                            minValue={currentYear - 10}
+                            maxValue={currentYear}
+                            defaultValue={ageFilter}
+                            formatOptions={{useGrouping: false}}
+                            onChange={(e) => { Array.isArray(e) ?setAgeFilter(e) : setAgeFilter(Array.from(e) )}}
+                        />
+                        <div className={"grid grid-cols-3 gap-2  flex-wrap"}>
+                            <Dropdown>
+                                <DropdownTrigger>
+                                    <Button variant={"flat"}>
+                                        Kjønn
+                                    </Button>
+                                </DropdownTrigger>
+                                <DropdownMenu aria-label={"gender selector"} disallowEmptySelection selectedKeys={genderFilter} selectionMode={"multiple"} onSelectionChange={(k) => setGenderFilter(k)}>
+                                    <DropdownItem key={"female"}>Søye</DropdownItem>
+                                    <DropdownItem key={"male"}>Veir</DropdownItem>
+                                </DropdownMenu>
+                            </Dropdown>
+                            <Dropdown>
+                                <DropdownTrigger>
+                                    <Button variant={"flat"}>
+                                        Status
+                                    </Button>
+                                </DropdownTrigger>
+                                <DropdownMenu aria-label={"status selector"} disallowEmptySelection selectedKeys={activeFilter} selectionMode={"multiple"} onSelectionChange={(k) => setActiveFilter(k) }>
+                                    <DropdownItem key={"active"}>Aktive</DropdownItem>
+                                    <DropdownItem key={"inactive"}>Inaktive</DropdownItem>
+                                </DropdownMenu>
+                            </Dropdown>
+                            <Dropdown>
+                                <DropdownTrigger>
+                                    <Button variant={"flat"}>
+                                        Kolonner
+                                    </Button>
+                                </DropdownTrigger>
+                                <DropdownMenu
+                                    disallowEmptySelection
+                                    aria-label="Table Columns"
+                                    closeOnSelect={false}
+                                    selectedKeys={visibleColumns}
+                                    selectionMode="multiple"
+                                    onSelectionChange={setVisibleColumns}
+                                >
+                                    {columns.map((column) => (
+                                        <DropdownItem key={column.uid} className="capitalize">
+                                            {capitalize(column.name)}
+                                        </DropdownItem>
+                                    ))}
+                                </DropdownMenu>
+                            </Dropdown>
+                        </div>
+                        <Button isDisabled={keyArray.length === 0} onPress={onOpen} variant={"shadow"} size={"lg"} color={"primary"} startContent={<PlusIcon/>}>
+                            Medisin
+                        </Button>
+                    </div>
                 </div>
             </div>
         );
@@ -410,65 +410,53 @@ export default function IndividualsPage() {
 
     const bottomContent = React.useMemo(() => {
         return (
-            <div>
-                <div className="py-2 px-2 flex justify-between items-center">
-                    <div className={"flex flex-col gap-2 w-[30%]"}>
-                        <div className=" text-small text-default-400">
-                          {selectedKeys === "all"
-                              ? "Alle individer markert"
-                              : `${selectedKeys.size} av ${filteredItems.length} markert`}
-                        </div>
-
-                        <Tooltip content={"Tilbakestill alle filtere"}>
-                            <Button size="sm" variant="flat" className={"w-fit"} onPress={clearFilterData}>
-                                Tilbakestill
-                            </Button>
-                        </Tooltip>
+            <div className="py-2 px-2 flex justify-between items-center">
+                <div className={"flex flex-col gap-2"}>
+                    <div className=" text-small text-default-400">
+                      {selectedKeys === "all"
+                          ? "Alle individer markert"
+                          : `${selectedKeys.size} av ${filteredItems.length} markert`}
                     </div>
+
+                    <Tooltip content={"Tilbakestill alle filtere"}>
+                        <Button size="sm" variant="flat" className={"w-fit"} onPress={clearFilterData}>
+                            Tilbakestill
+                        </Button>
+                    </Tooltip>
+                </div>
+
+                <div className={"flex flex-col gap-2"}>
+                    <label className="flex items-center gap-2 ml-auto text-default-400 text-small">
+                        Rader per side:
+                        <Dropdown>
+                            <DropdownTrigger>
+                                <Button size={"sm"} variant={"ghost"}>{rowsPerPage}</Button>
+                            </DropdownTrigger>
+                            <DropdownMenu
+                                onSelectionChange={onRowsPerPageChange}
+                                selectionMode="single"
+                                aria-label={"pagination selection"}
+                                disallowEmptySelection
+                            >
+                                <DropdownItem key="5">5</DropdownItem>
+                                <DropdownItem key="10">10</DropdownItem>
+                                <DropdownItem key="25">25</DropdownItem>
+                                <DropdownItem key="50">50</DropdownItem>
+                                <DropdownItem key="100">100</DropdownItem>
+                            </DropdownMenu>
+                        </Dropdown>
+                    </label>
 
                     <Pagination
                         isCompact
                         showControls
                         showShadow
                         color="primary"
+                        className={"ml-auto"}
                         page={page}
                         total={pages}
                         onChange={setPage}
                     />
-                    <div className="hidden sm:flex w-[30%] justify-end gap-2">
-                        <div className={"flex flex-col gap-2"}>
-                            <div className={"flex gap-2"}>
-                                <Button isDisabled={pages === 1} size="sm" variant="flat" onPress={onPreviousPage}>
-                                    Forrige
-                                </Button>
-                                <Button isDisabled={pages === 1} size="sm" variant="flat" onPress={onNextPage}>
-                                    Neste
-                                </Button>
-                            </div>
-
-                            <label className="flex items-center gap-2 ml-auto text-default-400 text-small">
-                                Rader:
-                                <Dropdown>
-                                    <DropdownTrigger>
-                                        <Button size={"sm"} variant={"ghost"}>{rowsPerPage}</Button>
-                                    </DropdownTrigger>
-                                    <DropdownMenu
-                                        onSelectionChange={onRowsPerPageChange}
-                                        selectionMode="single"
-                                        aria-label={"pagination selection"}
-                                        disallowEmptySelection
-                                    >
-                                        <DropdownItem key="5">5</DropdownItem>
-                                        <DropdownItem key="10">10</DropdownItem>
-                                        <DropdownItem key="25">25</DropdownItem>
-                                        <DropdownItem key="50">50</DropdownItem>
-                                        <DropdownItem key="100">100</DropdownItem>
-                                    </DropdownMenu>
-                                </Dropdown>
-                            </label>
-
-                        </div>
-                    </div>
                 </div>
             </div>
         );
@@ -478,7 +466,7 @@ export default function IndividualsPage() {
 
 
     return (
-        <div className="w-full lg:w-4/5 m-auto p-8">
+        <div className="w-full lg:w-4/5 m-auto p-8 border-2">
 
             <Table
                 aria-label="Example table with custom cells, pagination and sorting"

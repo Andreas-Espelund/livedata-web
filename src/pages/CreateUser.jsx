@@ -67,10 +67,10 @@ const SignUpForm = () => {
                         <Button type="submit" color={"primary"}>Lag bruker</Button>
                     </form>
                 </CardBody>
-                <CardFooter>
-                    <a className={"m-auto italic"} href={"/login"}> Gå til inlogging</a>
-                </CardFooter>
             </Card>
+            <div className={"grid gap-2"}>
+                <a className={"m-auto italic"} href={"/login"}> Gå til inlogging</a>
+            </div>
         </div>
     );
 };
