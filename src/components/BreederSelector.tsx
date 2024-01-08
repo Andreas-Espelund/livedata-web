@@ -3,9 +3,10 @@ import {Autocomplete, AutocompleteItem} from "@nextui-org/react";
 import {Context} from "@/App";
 
 
-export const BreederSelector = ({label, field}: {
+export const BreederSelector = ({label, field, fieldState}: {
     label: string | undefined,
     field: any,
+    fieldState: any,
 }) => {
 
     const {breeders} = useContext(Context)
@@ -15,10 +16,11 @@ export const BreederSelector = ({label, field}: {
             placeholder={label ? "Velg et individ" : ""}
             value={field?.value}
             onSelectionChange={(e) => field.onChange(e)}
+            errorMessage={fieldState?.error?.message}
         >
             {breeders.filter(e => e.status === "active").map(item =>
                 <AutocompleteItem
-                    key={item.id}
+                    key={item.doc}
                     textValue={`${item.nickname} (${item.id})`}
                 >
                     <div>

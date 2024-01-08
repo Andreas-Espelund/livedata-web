@@ -90,6 +90,7 @@ export default function TopNavBar() {
                         </DropdownItem>
                         <DropdownItem startContent={<GearIcon/>}> Innstillinger </DropdownItem>
                         <DropdownItem startContent={<InfoIcon/>}> <a href={"/info"}> Hjelp og info</a></DropdownItem>
+                        <DropdownItem color={"warning"} onPress={ () => localStorage.clear()}> CLEAR LOCAL STORAGE </DropdownItem>
                         <DropdownItem startContent={<LogoutIcon/>} onPress={logout} color={"danger"} className={"text-danger"}>
                             Logg ut
                         </DropdownItem>

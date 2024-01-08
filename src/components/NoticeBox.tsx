@@ -6,7 +6,7 @@ export function NoticeBox({title, message, type, noTimeout = false}: {
     title: string,
     message: string,
     type: "warning" | "danger" | "info" | "success",
-    noTimeout: boolean
+    noTimeout: boolean | undefined
 }) {
 
     const [isVisible, setIsVisible] = useState(true);

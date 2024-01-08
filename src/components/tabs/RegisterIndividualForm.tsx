@@ -13,6 +13,7 @@ import {formatDate} from "@/api/utils";
 import {addIndividual} from "@/api/firestore";
 import {Context} from "@/App";
 import firebase from "firebase/compat";
+import {BreederSelector} from "@/components/BreederSelector";
 
 const RegisterIndividualForm = () => {
     const {handleSubmit, control, formState: {isValid}} = useForm({
@@ -87,37 +88,25 @@ const RegisterIndividualForm = () => {
                             <Controller
                                 name="mother"
                                 control={control}
-                                rules={{
-                                    pattern: {
-                                        value: /^\d{5}$/,
-                                        message: "ID må være 5-sifret tall"
-                                    }
-                                }}
                                 render={({field,fieldState}) => (
-                                    <Input label="Mor sin ID" {...field} errorMessage={fieldState.error?.message}/>
+                                    <IndividualSelector label={"Mor sin id"} field={field} fieldState={fieldState} gender={"female"}/>
                                 )}
                             />
 
                             <Controller
                                 name="father"
                                 control={control}
-                                rules={{
-                                    pattern: {
-                                        value: /^\d{5}$/,
-                                        message: "ID må være 5-sifret tall"
-                                    }
-                                }}
                                 render={({field, fieldState}) => (
-                                    <Input label="Far sin ID" {...field} errorMessage={fieldState.error?.message}/>
+                                    <BreederSelector label={"Far sin id"} field={field} fieldState={fieldState}/>
                                 )}
                             />
 
                             <Controller
                                 name="date"
                                 control={control}
-                                rules={{required: true}}
-                                render={({field}) => (
-                                    <Input {...field} type="date" placeholder=" " label="Fødtselsdato"/>
+                                rules={{required: "Velg dato"}}
+                                render={({field, fieldState}) => (
+                                    <Input {...field} type="date" placeholder=" " label="Fødtselsdato" errorMessage={fieldState.error?.message}/>
                                 )}
                             />
 
@@ -125,10 +114,9 @@ const RegisterIndividualForm = () => {
                             <Controller
                                 name="gender"
                                 control={control}
-                                rules={{required: true}}
-                                render={({field}) => (
-
-                                    <GenderSelector field={field}/>
+                                rules={{required: "Velg kjønn"}}
+                                render={({field, fieldState}) => (
+                                    <GenderSelector field={field} fieldState={fieldState}/>
                                 )}
                             />
 

@@ -1,6 +1,6 @@
 import React, {useContext, useState} from "react";
 import {Controller, useForm} from "react-hook-form";
-import {Autocomplete, AutocompleteItem, Button, CardFooter} from "@nextui-org/react";
+import {Autocomplete, AutocompleteItem, Button, CardFooter, Textarea} from "@nextui-org/react";
 import {Card, CardBody, CardHeader} from "@nextui-org/card";
 import {Stack} from "@/components/Layout";
 import {Heading2} from "@/components/Headings";
@@ -12,17 +12,10 @@ import {Context} from "@/App";
 import NoticeWrapper from "@/components/NoticeWrapper";
 import {Simulate} from "react-dom/test-utils";
 import {NoticeBox} from "@/components/NoticeBox";
-
-const individualOptions = [
-    {value: 1, label: "10010"},
-    {value: 2, label: "20020"},
-    {value: 3, label: "30030"},
-    // ... add more individuals
-];
-
+import {StatusRecord} from "@/types/types";
 
 const DeactivationForm = () => {
-    const {user, individuals} = useContext(Context)
+    const {user} = useContext(Context)
     const [success, setSuccess]  = useState(false)
     const [failure, setFailure]  = useState(false)
     const [loading, setLoading] = useState(false)
@@ -31,19 +24,32 @@ const DeactivationForm = () => {
         mode: 'onChange',
         defaultValues: {
             date: formatDate(new Date()),
-            id: "",
-            status: "slaught"
+            individual: "",
+            status: "slaught",
+            note: ""
         }
     });
 
-    const onSubmit = (data) => {
+    const onSubmit = async (data) => {
         setLoading(true)
         try {
-            const doc = individuals.filter(e => e.id === data.id)[0].doc
-            updateIndividualStatus(user.uid, doc, data.status)
+            console.log(user?.uid, data)
+
+            const statusRecord : StatusRecord = {
+                date: data.date, individual: data.individual, note: data.note, status: data.status
+
+            }
+            await updateIndividualStatus(user.uid, statusRecord)
+
+
             setSuccess(true)
             reset()
-        } catch (error){
+
+            setTimeout(() => {
+                setSuccess(false);
+                setFailure(false);
+            }, 8000); // This timeout should match the timeout in the NoticeBox component
+        } catch (error) {
             console.error(error)
             setFailure(true)
         } finally {
@@ -61,18 +67,18 @@ const DeactivationForm = () => {
                 <form onSubmit={handleSubmit(onSubmit)}>
                     <Stack>
                         <Controller
-                            name="id"
+                            name="individual"
                             control={control}
-                            rules={{required: true}}
-                            render={({field}) => (
-                                <IndividualSelector label="Individ" field={field}/>
+                            rules={{required: "Velg ett individ"}}
+                            render={({field, fieldState}) => (
+                                <IndividualSelector gender={undefined} label="Individ" field={field} fieldState={fieldState}/>
                             )}
                         />
 
                         <Controller
                             name="date"
                             control={control}
-                            rules={{required: true}}
+                            rules={{required: "Velg dato"}}
                             render={({field}) => (
                                 <Input
                                     type={"date"}
@@ -87,7 +93,7 @@ const DeactivationForm = () => {
                         <Controller
                             name="status"
                             control={control}
-                            rules={{required: true}}
+                            rules={{required: "Velg utmeldingsårsak"}}
                             render={({field}) => (
                                 <Autocomplete
                                     value={field?.value}
@@ -117,15 +123,25 @@ const DeactivationForm = () => {
                             )}
                         />
 
+                        <Controller
+                            name="note"
+                            control={control}
+                            defaultValue=""
+                            render={({field}) => (
+                                <Textarea
+                                    {...field}
+                                    placeholder="Skriv inn notat"
+                                    rows={4}
+                                    required
+                                />
+                            )}
+                        />
                         <Button type="submit" color="danger" className={"ml-auto"} isLoading={loading}>
                             Bekreft utmelding
                         </Button>
                     </Stack>
                 </form>
             </CardBody>
-            {/*<NoticeWrapper>*/}
-            {/*    <NoticeBox title={"Ikkje fungerende"} message={"Dette skjemaet er i arbeid"} type={"warning"}  noTimeout/>*/}
-            {/*</NoticeWrapper>*/}
         </Card>
 
             <NoticeWrapper>

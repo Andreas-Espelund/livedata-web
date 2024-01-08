@@ -1,5 +1,5 @@
 // MedicineRegistrationModal.tsx
-import React, {useState} from 'react';
+import React, {useContext, useState} from 'react';
 import {
     Button,
     Dropdown,
@@ -10,22 +10,24 @@ import {
     ModalBody,
     ModalContent,
     ModalFooter,
-    ModalHeader
+    ModalHeader, Progress, user
 } from '@nextui-org/react';
 import {Controller, useForm} from "react-hook-form";
 import {Input} from "@nextui-org/input";
 import {Row, Stack} from "@/components/Layout";
 import Message from "@/components/Message";
+import {formatDate} from "@/api/utils";
+import {Individual} from "@/types/types";
+import {addMedicineRecord, addNoteRecord} from "@/api/firestore";
+import {Context} from "@/App";
+import NoticeWrapper from "@/components/NoticeWrapper";
+import {NoticeBox} from "@/components/NoticeBox";
+import {ChevronDownIcon} from "@/images/icons";
 
 interface MedicineRegistrationModalProps {
     isOpen: boolean;
     onClose: () => void;
-    selectedRows: string[];
-}
-
-interface RegistrationFormData {
-    date: string;
-    medicineType: string;
+    selectedRows: Individual[];
 }
 
 function validateDate(date: string): string | undefined {
@@ -42,66 +44,57 @@ function validateDate(date: string): string | undefined {
 }
 
 
-const MedicineRegistrationModal: React.FC<MedicineRegistrationModalProps> = (
-    {
-        isOpen,
-        onClose,
-        selectedRows,
-    }
-) => {
+const MedicineRegistrationModal = ({isOpen, onClose, selectedRows}: MedicineRegistrationModalProps) => {
+    const {user} = useContext(Context)
+    const [isLoading, setLoading] = useState(false)
+    const [error, setError] = useState(false)
+    const [success, setSuccess] = useState(false)
+    const [value, setValue] = useState(0)
 
-    const {register, handleSubmit, errors, control} = useForm<RegistrationFormData>();
+    const {register, handleSubmit, control, reset} = useForm({
+        defaultValues: {
+            date: formatDate(new Date()),
+            medicine: "",
+        }
+    });
 
+    const onSubmit = async (data) => {
+        if (!user) return;
+        setLoading(true)
 
-    function sleep(seconds) {
-        return new Promise(resolve => setTimeout(resolve, seconds * 1000));
-    }
-
-
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [isSubmittingError, setIsSubmittingError] = useState(false);
-    const [isSubmittingSuccess, setIsSubmittingSuccess] = useState(false);
-    const handleRegistration = async (formData: RegistrationFormData) => {
-        const registrationPayload = {
-            type: formData.medicineType,
-            date: formData.date,
-            items: selectedRows,
-        };
-        setIsSubmitting(true)
-
-        await sleep(2)
+        console.log('registering medicine')
+        console.log(data.date)
+        console.log(data.medicine)
+        selectedRows.forEach(e => console.log(e.doc))
 
         try {
-            const response = await fetch('/register/medicine', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(registrationPayload),
-            });
-
-            if (response.ok) {
-                console.log('Registration successful');
-
-            } else {
-                console.error('Registration failed');
-            }
-            setIsSubmitting(false)
-            setIsSubmittingSuccess(true)
+            const promises = selectedRows.map(e => addMedicineRecord(user.uid, {...data, individual: e.doc }))
+            promises.forEach(async e => {
+                await e
+                setValue(i => i+1)
+            })
+            setSuccess(true)
         } catch (error) {
-            console.error('An error occurred while registering:', error);
-            setIsSubmitting(false)
-            //setIsSubmittingError(true)
-            setIsSubmittingSuccess(true)
+            console.error(error)
+            setError(true)
+        } finally {
+            setLoading(false)
         }
+    }
 
-        // You can perform the actual registration here
-    };
+
+    const closeHandler = () => {
+        setValue(0)
+        reset()
+        setSuccess(false)
+        setLoading(false)
+        setError(false)
+        onClose()
+    }
 
     return (
 
-        <Modal isOpen={isOpen} onClose={onClose}>
-
+        <Modal isOpen={isOpen} onClose={closeHandler} isDismissable={false}>
             <ModalContent>
                 <ModalHeader>
                     Ny Medisinering
@@ -110,76 +103,64 @@ const MedicineRegistrationModal: React.FC<MedicineRegistrationModalProps> = (
                     <Row>
                         <Dropdown>
                             <DropdownTrigger>
-                                <Button
-                                    variant="bordered"
-                                >
+                                <Button variant="bordered" endContent={<ChevronDownIcon/>}>
                                     {`Påvirker ${selectedRows.length}  ${selectedRows.length == 1 ? 'individ' : 'individer'}`}
-                                    <ChevronDownIcon/>
                                 </Button>
                             </DropdownTrigger>
                             <DropdownMenu aria-label="Static Actions">
-                                {
-                                    selectedRows.map((item) => (
-                                        <DropdownItem key={item}>
-                                            {item}
-                                        </DropdownItem>
-                                    ))
-                                }
+                                {selectedRows.map((item) =>
+                                    <DropdownItem key={item.doc}> {item.id} </DropdownItem>
+                                )}
                             </DropdownMenu>
                         </Dropdown>
                     </Row>
-                    <form id="registrationForm">
+                    <form id="registrationForm" onSubmit={handleSubmit(onSubmit)}>
                         <Stack>
-                            <label>Dato:</label>
                             <Controller
                                 name="date"
                                 control={control}
-                                rules={{required: true}}
-                                render={({field}) => <Input type="date" {...field}/>}
+                                rules={{required: "Velg dato"}}
+                                render={({field, fieldState}) =>
+                                    <Input label={"Dato"} type="date" {...field} errorMessage={fieldState.error?.message}/>}
                             />
-                            {/*{errors.date && <p>Date is required</p>}*/}
-                            <label>Medisin:</label>
                             <Controller
-                                name="medicineType"
+                                name="medicine"
                                 control={control}
-                                rules={{required: true}}
-                                render={({field}) => <Input {...field} />}
+                                rules={{required: "Skriv navn på medisin"}}
+                                render={({field, fieldState}) =>
+                                    <Input label={"medisin"} {...field} errorMessage={fieldState.error?.message}/>}
                             />
-                            {/*{errors.medicineType && <p>Medicine Type is required</p>}*/}
+
+                            <div className={"flex justify-between items-center gap-4 w-full"}>
+                                {isLoading || error || success &&
+                                    <Progress
+                                        aria-label="Registering"
+                                        size="md"
+                                        value={value}
+                                        maxValue={selectedRows.length}
+                                        color={error ? "danger" : "success"}
+                                        showValueLabel={true}
+                                        className="max-w-md pb-2"
+                                    />
+                                }
+                                <Button isLoading={isLoading} form="registrationForm" color={"primary"} type={"submit"} className={"ml-auto"}>
+                                    Registrer
+                                </Button>
+                            </div>
                         </Stack>
                     </form>
-                    {isSubmittingError &&
-                        <Message text={"En feil oppstod ved registrering"} variant={"Error"}
-                                 onClose={() => setIsSubmittingError(false)}/>
-                    }
-                    {isSubmittingSuccess &&
-                        <Message text={"Registrering fullført"} variant={"Success"}
-                                 onClose={() => setIsSubmittingSuccess(false)}/>
-                    }
                 </ModalBody>
-                <ModalFooter>
-                    <Button onClick={onClose} color={"danger"} variant={"bordered"}>
-                        Avbryt
-                    </Button>
-                    <Button isLoading={isSubmitting} form="registrationForm" color={"primary"}
-                            onClick={handleSubmit(handleRegistration)}>
-                        Registrer
-                    </Button>
-
-                </ModalFooter>
             </ModalContent>
 
+            <NoticeWrapper>
+                {error && <NoticeBox title={"Noko gjekk gale"} message={"Kunne ikkje registrere medisinering"} type={"danger"} noTimeout={false}/>}
+                {success && <NoticeBox title={"Suksess"} message={"Medisinering registrert"} type={"success"} noTimeout={false}/>}
+            </NoticeWrapper>
         </Modal>
     );
 };
 
-export const ChevronDownIcon = () => (
-    <svg fill="none" height="14" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg">
-        <path
-            d="M17.9188 8.17969H11.6888H6.07877C5.11877 8.17969 4.63877 9.33969 5.31877 10.0197L10.4988 15.1997C11.3288 16.0297 12.6788 16.0297 13.5088 15.1997L15.4788 13.2297L18.6888 10.0197C19.3588 9.33969 18.8788 8.17969 17.9188 8.17969Z"
-            fill="currentColor"/>
-    </svg>
-);
+
 
 
 export default MedicineRegistrationModal;

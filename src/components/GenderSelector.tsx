@@ -4,8 +4,9 @@ import React from "react";
 
 interface GenderSelectorProps {
     field: any,
+    fieldState: any,
 }
-export const GenderSelector = ({field}: GenderSelectorProps) => {
+export const GenderSelector = ({field, fieldState}: GenderSelectorProps) => {
 
     return (
         <Autocomplete
@@ -13,6 +14,7 @@ export const GenderSelector = ({field}: GenderSelectorProps) => {
             label={"Velg kjønn"}
             onSelectionChange={(e) => field.onChange(e)}
             defaultSelectedKey={field.value}
+            errorMessage={fieldState?.error?.message}
         >
             <AutocompleteItem
                 textValue="Søye"

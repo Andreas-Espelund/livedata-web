@@ -1,13 +1,12 @@
-import React, {useContext} from "react";
+import React, {useContext, useEffect} from "react";
 import {
-    AutocompleteItem,
-    Button,
+    Button, ButtonGroup,
     Chip,
     Dropdown,
     DropdownItem,
     DropdownMenu,
     DropdownTrigger,
-    Input,
+    Input, Modal, ModalBody, ModalHeader,
     Pagination,
     Selection,
     Slider,
@@ -17,22 +16,25 @@ import {
     TableCell,
     TableColumn,
     TableHeader,
-    TableRow
+    TableRow, Tooltip, useDisclosure
 } from "@nextui-org/react";
 
-import {ChevronDownIcon, FilterIcon, PlusIcon, SearchIcon, VerticalDotsIcon} from "../../public/icons";
+import { SearchIcon, VerticalDotsIcon} from "../../public/icons";
 import {Context} from "@/App";
 import {Individual} from "@/types/types";
 import {Heading1} from "@/components/Headings";
+import {PlusIcon} from "@/images/icons";
+import MedicineRegistrationModal from "@/components/MedicineRegistrationModal";
+
 
 const columns = [
     {name: "ID (ØREMERKE)", uid: "id", sortable: true},
-    {name: "FØDT DATO", uid: "birth_date", sortable: true},
+    {name: "KJØNN", uid: "gender", sortable: true},
+    {name: "MOR", uid: "mother", sortable: true},
     {name: "STATUS", uid: "status", sortable: true},
     {name: "FAR", uid: "father", sortable: true},
-    {name: "MOR", uid: "mother", sortable: true},
-    {name: "KJØNN", uid: "gender", sortable: true},
     {name: "KOPP", uid: "bottle", sortable: true},
+    {name: "FØDT DATO", uid: "birth_date", sortable: true},
     {name: "VALG", uid: "actions"},
 ];
 
@@ -50,21 +52,39 @@ const capitalize = (str: string) => {
     return str.toUpperCase()
 }
 
-const INITIAL_VISIBLE_COLUMNS = ["id", "birth_date", "status", "father", "mother", "gender", "actions", "bottle"];
-const INITIAL_VISIBLE_STATUS = ["active"]
+const DEFAULTS :Record<string, any> = {
+    "columns" : ["id", "birth_date", "status", "father", "mother", "gender", "actions", "bottle"],
+    "status" : ["active"],
+    "genders": ["male", "female"],
+    "year": [2024 - 5, 2024],
+    "pages" : 10
+}
+
+
+// Function to get value from local storage or return default
+const get_local_or_default_value = (key: string): any => {
+    const storedItem = localStorage.getItem(key);
+
+    return storedItem !== null ? JSON.parse(storedItem) : DEFAULTS[key]
+
+};
+
 
 export default function IndividualsPage() {
-    const currentYear = new Date().getFullYear()
-    const {individuals} = useContext(Context)
 
+    const {isOpen, onOpen, onOpenChange} = useDisclosure();
+
+
+    const currentYear = new Date().getFullYear()
+    const {individuals, user} = useContext(Context)
     const [filterValue, setFilterValue] = React.useState("");
     const [selectedKeys, setSelectedKeys] = React.useState<Selection>(new Set([]));
-    const [visibleColumns, setVisibleColumns] = React.useState<Selection>(new Set(INITIAL_VISIBLE_COLUMNS));
-    const [genderFilter, setGenderFilter] = React.useState<string>("all");
-    const [rowsPerPage, setRowsPerPage] = React.useState(10);
+    const [visibleColumns, setVisibleColumns] = React.useState<Selection>(new Set(get_local_or_default_value("columns")));
+    const [genderFilter, setGenderFilter] = React.useState<Selection>(new Set(get_local_or_default_value("genders")));
+    const [activeFilter, setActiveFilter] = React.useState<Selection>(new Set(get_local_or_default_value("status")));
+    const [rowsPerPage, setRowsPerPage] = React.useState(get_local_or_default_value("pages"));
     const [page, setPage] = React.useState(1);
-    const [ageFilter, setAgeFilter] = React.useState<number[] | number>([currentYear - 5, currentYear])
-    const [activeFilter, setActiveFilter] = React.useState<Selection>(new Set(INITIAL_VISIBLE_STATUS))
+    const [ageFilter, setAgeFilter] = React.useState<number[] | number>(get_local_or_default_value("year"))
     const [sortDescriptor, setSortDescriptor] = React.useState<SortDescriptor>({
         column: "tag",
         direction: "ascending",
@@ -72,6 +92,34 @@ export default function IndividualsPage() {
 
 
 
+    // updating local browser storage
+    useEffect(() => {
+        localStorage.setItem('columns', JSON.stringify(Array.from(visibleColumns)));
+    }, [visibleColumns]);
+
+    useEffect(() => {
+        localStorage.setItem('status', JSON.stringify(Array.from(activeFilter)));
+    }, [activeFilter]);
+
+    useEffect(() => {
+        localStorage.setItem('genders', JSON.stringify(Array.from(genderFilter)));
+    }, [genderFilter]);
+
+    useEffect(() => {
+        localStorage.setItem("year", JSON.stringify(ageFilter))
+    }, [ageFilter]);
+
+    useEffect(() => {
+        localStorage.setItem("pages", JSON.stringify(rowsPerPage))
+    }, [rowsPerPage]);
+
+
+    const clearFilterData = () => {
+        setAgeFilter(DEFAULTS["year"])
+        setVisibleColumns(new Set(DEFAULTS["columns"]))
+        setGenderFilter(new Set(DEFAULTS["genders"]))
+        setActiveFilter(new Set(DEFAULTS["status"]))
+    }
 
     const headerColumns = React.useMemo(() => {
         if (visibleColumns === "all") return columns;
@@ -80,41 +128,52 @@ export default function IndividualsPage() {
     }, [visibleColumns]);
 
 
-    // filtering
+    /*
+    * Filtering and sorting function
+    * */
     const hasSearchFilter = Boolean(filterValue);
 
     const filteredItems = React.useMemo(() => {
-        let filteredUsers = [...individuals];
+        let filtered = [...individuals];
 
+        // apply search filter
         if (hasSearchFilter) {
-            filteredUsers = filteredUsers.filter((user) =>
+            filtered = filtered.filter((user) =>
                 user.id.toLowerCase().includes(filterValue.toLowerCase()),
             );
         }
 
-        if (genderFilter !== "all") {
-            filteredUsers = filteredUsers.filter((ind) => ind.gender === genderFilter)
+        // apply gender filter
+        const genders = Array.from(genderFilter)
+        if (genders.length == 1) {
+            filtered = filtered.filter((ind) => ind.gender === genders[0])
         }
 
+        // apply age filter
         const range = Array.isArray(ageFilter) ? ageFilter : [ageFilter, ageFilter]
-
-        filteredUsers = filteredUsers.filter(ind => {
+        filtered = filtered.filter(ind => {
             let year = Number(ind.birth_date.slice(0, 4))
             if (year < 1) year = currentYear
             return year >= range[0] && year <= range[1]
-
         })
 
-
-        if (activeFilter) {
-            const stat = Array.from(activeFilter)
-            filteredUsers = filteredUsers.filter(ind => {
-                return stat.length == 2 || stat[0] ===  ind.status
-            })
+        // apply status filter
+        const statuses = Array.from(activeFilter)
+        if (statuses.length == 1) {
+            if (statuses[0] == "active"){
+                filtered = filtered.filter(ind => statuses[0] ===  ind.status)
+            } else {
+                filtered = filtered.filter(ind => "active" !==  ind.status)
+            }
         }
 
-        return filteredUsers;
+        return filtered;
     }, [individuals, filterValue, genderFilter, ageFilter, activeFilter]);
+
+
+    /*
+    * Sorting and pagination
+    * */
 
     const pages = Math.ceil(filteredItems.length / rowsPerPage);
 
@@ -136,7 +195,14 @@ export default function IndividualsPage() {
     }, [sortDescriptor, items]);
 
 
-    // cell render method
+    // for medicine modal
+    const keyArray = Array.from(selectedKeys)
+    const modalItems = selectedKeys === "all" ? filteredItems : individuals.filter(e => keyArray.includes(e.doc))
+
+
+    /*
+    * Cell render method
+    * */
     const renderCell = React.useCallback((individual: Individual, columnKey: React.Key) => {
         const cellValue = individual[columnKey as keyof Individual];
 
@@ -166,7 +232,7 @@ export default function IndividualsPage() {
                                     <VerticalDotsIcon/>
                                 </Button>
                             </DropdownTrigger>
-                            <DropdownMenu>
+                            <DropdownMenu aria-label={"action menu"}>
                                 <DropdownItem href={`/individuals/${individual.id}`}>Detaljer</DropdownItem>
                                 <DropdownItem>Ny lambing</DropdownItem>
                                 <DropdownItem>Ny utmelding</DropdownItem>
@@ -175,13 +241,25 @@ export default function IndividualsPage() {
                     </div>
                 );
             case "father":
-                return (
-                    <p>{cellValue || 'ukjent'}</p>
-                );
+
+                if (Object.keys(cellValue).length === 0) {
+                    return <p>-</p>
+                } else {
+                    return (
+                        <div>
+                            <p className={"text-sm font-medium"}>{cellValue.nickname}</p>
+                            <p className={"text-tiny text-zinc-600"}>{cellValue.id}</p>
+                        </div>
+                    );
+                }
             case "mother":
-                return (
-                    <p>{cellValue || 'ukjent'}</p>
-                );
+                if (Object.keys(cellValue).length === 0) {
+                    return <p>-</p>
+                } else {
+                    return (
+                        <p>{cellValue.id}</p>
+                    );
+                }
 
             case "gender":
                 return (
@@ -261,77 +339,60 @@ export default function IndividualsPage() {
                         step={1}
                         minValue={currentYear - 10}
                         maxValue={currentYear}
-                        defaultValue={[currentYear - 5, currentYear]}
+                        defaultValue={ageFilter}
                         formatOptions={{useGrouping: false}}
-                        onChange={(e) => setAgeFilter(e)}
+                        onChange={(e) => { Array.isArray(e) ?setAgeFilter(e) : setAgeFilter(Array.from(e) )}}
                     />
 
-                    <Dropdown>
-                        <DropdownTrigger>
-                            <Button endContent={<FilterIcon className="text-small"/>} variant="flat">
-                                Viser {
-                                genderFilter === "all" && "alle" ||
-                                genderFilter === "female" && "søyer" ||
-                                "veirar"
-                            }</Button>
-                        </DropdownTrigger>
-                        <DropdownMenu selectionMode={"single"} onSelectionChange={onGenderFilterChange}>
-                            <DropdownItem key={"all"}>Alle</DropdownItem>
-                            <DropdownItem key={"female"}>Søye</DropdownItem>
-                            <DropdownItem key={"male"}>Veir</DropdownItem>
-                        </DropdownMenu>
-                    </Dropdown>
-                    <Dropdown>
-                        <DropdownTrigger>
-                            <Button endContent={<FilterIcon className="text-small"/>} variant="flat">
-                                Status filter
-                            </Button>
-                        </DropdownTrigger>
-                        <DropdownMenu disallowEmptySelection selectedKeys={activeFilter} selectionMode={"multiple"} onSelectionChange={(k) => setActiveFilter(k) }>
-                            <DropdownItem key={"active"}>Aktive</DropdownItem>
-                            <DropdownItem key={"inactive"}>Inaktive</DropdownItem>
-                        </DropdownMenu>
-                    </Dropdown>
-                    <Dropdown>
-                        <DropdownTrigger className="hidden sm:flex">
-                            <Button endContent={<ChevronDownIcon className="text-small"/>} variant="flat">
-                                Kolonner
-                            </Button>
-                        </DropdownTrigger>
-                        <DropdownMenu
-                            disallowEmptySelection
-                            aria-label="Table Columns"
-                            closeOnSelect={false}
-                            selectedKeys={visibleColumns}
-                            selectionMode="multiple"
-                            onSelectionChange={setVisibleColumns}
-                        >
-                            {columns.map((column) => (
-                                <DropdownItem key={column.uid} className="capitalize">
-                                    {capitalize(column.name)}
-                                </DropdownItem>
-                            ))}
-                        </DropdownMenu>
-                    </Dropdown>
-
-
-
-                    <label className="flex items-center gap-2 text-default-400 text-small">
-                        Rader:
+                    <ButtonGroup variant={"flat"}>
                         <Dropdown>
                             <DropdownTrigger>
-                                <Button size={"sm"} variant={"ghost"}>{rowsPerPage}</Button>
+                                <Button>
+                                    Kjønn
+                                </Button>
                             </DropdownTrigger>
-                            <DropdownMenu onSelectionChange={onRowsPerPageChange} selectionMode="single"
-                                          disallowEmptySelection>
-                                <DropdownItem key="5">5</DropdownItem>
-                                <DropdownItem key="10">10</DropdownItem>
-                                <DropdownItem key="25">25</DropdownItem>
-                                <DropdownItem key="50">50</DropdownItem>
-                                <DropdownItem key="100">100</DropdownItem>
+                            <DropdownMenu aria-label={"gender selector"} disallowEmptySelection selectedKeys={genderFilter} selectionMode={"multiple"} onSelectionChange={(k) => setGenderFilter(k)}>
+                                <DropdownItem key={"female"}>Søye</DropdownItem>
+                                <DropdownItem key={"male"}>Veir</DropdownItem>
                             </DropdownMenu>
                         </Dropdown>
-                    </label>
+                        <Dropdown>
+                            <DropdownTrigger>
+                                <Button>
+                                    Status
+                                </Button>
+                            </DropdownTrigger>
+                            <DropdownMenu aria-label={"status selector"} disallowEmptySelection selectedKeys={activeFilter} selectionMode={"multiple"} onSelectionChange={(k) => setActiveFilter(k) }>
+                                <DropdownItem key={"active"}>Aktive</DropdownItem>
+                                <DropdownItem key={"inactive"}>Inaktive</DropdownItem>
+                            </DropdownMenu>
+                        </Dropdown>
+                        <Dropdown>
+                            <DropdownTrigger className="hidden sm:flex">
+                                <Button>
+                                    Kolonner
+                                </Button>
+                            </DropdownTrigger>
+                            <DropdownMenu
+                                disallowEmptySelection
+                                aria-label="Table Columns"
+                                closeOnSelect={false}
+                                selectedKeys={visibleColumns}
+                                selectionMode="multiple"
+                                onSelectionChange={setVisibleColumns}
+                            >
+                                {columns.map((column) => (
+                                    <DropdownItem key={column.uid} className="capitalize">
+                                        {capitalize(column.name)}
+                                    </DropdownItem>
+                                ))}
+                            </DropdownMenu>
+                        </Dropdown>
+                    </ButtonGroup>
+
+                    <Button isDisabled={keyArray.length === 0} onPress={onOpen} className={"ml-auto"} variant={"shadow"} size={"lg"} color={"primary"} startContent={<PlusIcon/>}>
+                        Medisin
+                    </Button>
                 </div>
             </div>
         );
@@ -339,46 +400,86 @@ export default function IndividualsPage() {
         filterValue,
         visibleColumns,
         onSearchChange,
-        onRowsPerPageChange,
-        rowsPerPage,
         individuals.length,
         hasSearchFilter,
         genderFilter,
         ageFilter,
-        activeFilter
+        activeFilter,
+        keyArray
     ]);
 
     const bottomContent = React.useMemo(() => {
         return (
-            <div className="py-2 px-2 flex justify-between items-center">
-        <span className="w-[30%] text-small text-default-400">
-          {selectedKeys === "all"
-              ? "Alle individer markert"
-              : `${selectedKeys.size} av ${filteredItems.length} markert`}
-        </span>
-                <Pagination
-                    isCompact
-                    showControls
-                    showShadow
-                    color="primary"
-                    page={page}
-                    total={pages}
-                    onChange={setPage}
-                />
-                <div className="hidden sm:flex w-[30%] justify-end gap-2">
-                    <Button isDisabled={pages === 1} size="sm" variant="flat" onPress={onPreviousPage}>
-                        Forrige
-                    </Button>
-                    <Button isDisabled={pages === 1} size="sm" variant="flat" onPress={onNextPage}>
-                        Neste
-                    </Button>
+            <div>
+                <div className="py-2 px-2 flex justify-between items-center">
+                    <div className={"flex flex-col gap-2 w-[30%]"}>
+                        <div className=" text-small text-default-400">
+                          {selectedKeys === "all"
+                              ? "Alle individer markert"
+                              : `${selectedKeys.size} av ${filteredItems.length} markert`}
+                        </div>
+
+                        <Tooltip content={"Tilbakestill alle filtere"}>
+                            <Button size="sm" variant="flat" className={"w-fit"} onPress={clearFilterData}>
+                                Tilbakestill
+                            </Button>
+                        </Tooltip>
+                    </div>
+
+                    <Pagination
+                        isCompact
+                        showControls
+                        showShadow
+                        color="primary"
+                        page={page}
+                        total={pages}
+                        onChange={setPage}
+                    />
+                    <div className="hidden sm:flex w-[30%] justify-end gap-2">
+                        <div className={"flex flex-col gap-2"}>
+                            <div className={"flex gap-2"}>
+                                <Button isDisabled={pages === 1} size="sm" variant="flat" onPress={onPreviousPage}>
+                                    Forrige
+                                </Button>
+                                <Button isDisabled={pages === 1} size="sm" variant="flat" onPress={onNextPage}>
+                                    Neste
+                                </Button>
+                            </div>
+
+                            <label className="flex items-center gap-2 ml-auto text-default-400 text-small">
+                                Rader:
+                                <Dropdown>
+                                    <DropdownTrigger>
+                                        <Button size={"sm"} variant={"ghost"}>{rowsPerPage}</Button>
+                                    </DropdownTrigger>
+                                    <DropdownMenu
+                                        onSelectionChange={onRowsPerPageChange}
+                                        selectionMode="single"
+                                        aria-label={"pagination selection"}
+                                        disallowEmptySelection
+                                    >
+                                        <DropdownItem key="5">5</DropdownItem>
+                                        <DropdownItem key="10">10</DropdownItem>
+                                        <DropdownItem key="25">25</DropdownItem>
+                                        <DropdownItem key="50">50</DropdownItem>
+                                        <DropdownItem key="100">100</DropdownItem>
+                                    </DropdownMenu>
+                                </Dropdown>
+                            </label>
+
+                        </div>
+                    </div>
                 </div>
             </div>
         );
-    }, [selectedKeys, items.length, page, pages, hasSearchFilter]);
+    }, [selectedKeys, items.length, page, pages, hasSearchFilter,onRowsPerPageChange, rowsPerPage,]);
+
+
+
 
     return (
         <div className="w-full lg:w-4/5 m-auto p-8">
+
             <Table
                 aria-label="Example table with custom cells, pagination and sorting"
                 isHeaderSticky
@@ -409,12 +510,13 @@ export default function IndividualsPage() {
                 </TableHeader>
                 <TableBody emptyContent={"Ingen individer funnet"} items={sortedItems}>
                     {(item) => (
-                        <TableRow key={item.id}>
+                        <TableRow key={item.doc}>
                             {(columnKey) => <TableCell>{renderCell(item, columnKey)}</TableCell>}
                         </TableRow>
                     )}
                 </TableBody>
             </Table>
+            <MedicineRegistrationModal isOpen={isOpen} onClose={onOpenChange} selectedRows={modalItems}/>
         </div>
     );
 }

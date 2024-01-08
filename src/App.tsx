@@ -26,6 +26,7 @@ interface ContextType {
   individuals: Individual[];
   breeders: Breeder[];
   user: User | undefined;
+  getIndividual: (doc: string)=>Individual | undefined;
 }
 function App() {
   const [individuals, setIndividuals] = useState<Individual[]>([])
@@ -33,6 +34,10 @@ function App() {
   const [user, setUser] = useState<User>(undefined)
   const [isLoading, setIsLoading] = useState(true); // Loading state
 
+
+  const getIndividual = (doc: string): Individual | undefined => {
+      return individuals.find(e => e.doc === doc)
+  }
   useEffect(() => {
     if (user){
       getAllIndividuals(user.uid).then(res => {
@@ -95,7 +100,7 @@ function App() {
   ])
   return (
 
-      <Context.Provider value={{individuals, breeders, user}}>
+      <Context.Provider value={{individuals, breeders, user, getIndividual}}>
         <NextUIProvider>
           <RouterProvider router={router}/>
         </NextUIProvider>

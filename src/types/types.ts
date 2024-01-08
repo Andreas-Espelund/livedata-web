@@ -17,3 +17,30 @@ export type Breeder = {
     status: string,
     doc: string
 }
+
+export type BirthRecord = {
+    mother: string;
+    father: string;
+    date: string;
+    lambs: string[];
+    note: string;
+}
+
+export type StatusRecord = {
+    individual: string;
+    date: string;
+    status: string;
+    note: string;
+}
+
+export type NoteRecord = {
+    individual: string;
+    date: string;
+    note: string;
+}
+
+export type MedicineRecord = {
+    individual: string;
+    date: string;
+    medicine: string;
+}
