@@ -1,6 +1,7 @@
 import {collection, doc, getDoc, getDocs, orderBy, query, setDoc, updateDoc} from 'firebase/firestore'
 import {db} from '@/api/firebase'
-import {Breeder, Individual, MedicineRecord, NoteRecord, StatusRecord} from "@/types/types";
+import {Breeder, Individual, MedicineRecord, NoteRecord, StatusRecord, UserDetail} from "@/types/types";
+import {user} from "@nextui-org/react";
 
 
 export const addIndividual = async (userId, individual) => {
@@ -29,23 +30,6 @@ export const updateIndividualStatus = async (userId: string, statusRecord: Statu
 
     await addStatusRecord(userId, statusRecord)
 }
-
-
-// export const getAllIndividuals = async (userId: string): Promise<Individual[]> => {
-//     try {
-//         const individualsCol = collection(db, "users", userId, "individuals");
-//         const snapshot = await getDocs(individualsCol);
-//
-//         return snapshot.docs.map((doc): Individual => <Individual>({
-//             ...doc.data(),
-//             doc: doc.id,
-//         }));
-//     } catch (error) {
-//         console.error("Error fetching individuals:", error);
-//         return [];
-//     }
-// };
-
 
 export const getAllIndividuals = async (userId: string): Promise<Individual[]> => {
     try {
@@ -95,13 +79,16 @@ export const addBreeder = async (userId: string, breeder: Breeder) => {
     await setDoc(individualRef, breeder)
 }
 
-export const getBreeders = async (userId: string): Promise<Breeder> => {
+export const getBreeders = async (userId: string): Promise<Breeder[]> => {
     const breederColRef = collection(db, "users", userId, "breeders");
     const q = query(breederColRef, orderBy("status", "asc")); // Ordering by 'status'
 
     const snapshot = await getDocs(q);
 
-    return snapshot.docs.map(doc => ({ ...doc.data(), doc: doc.id  }));
+    return snapshot.docs.map(doc => {
+        const b:Breeder = {birth_date: doc.data().birth_date, doc: doc.id, id: doc.data().id, nickname: doc.data().nickname, status: doc.data().status}
+        return b
+    })
 }
 
 export const updateBreederStatus = async (userId, breederId, newStatus) => {
@@ -177,3 +164,42 @@ export const addMedicineRecord = async (userId: string, record: MedicineRecord) 
     }
 };
 
+
+export const addUserDetails = async (userId: string, userDetails: UserDetail): Promise<void> => {
+    try {
+        await setDoc(doc(db, "users", userId), userDetails);
+
+    } catch (error) {
+        console.error(error)
+    }
+}
+
+export const getUserDetails = async (userId: string): Promise<UserDetail | undefined> => {
+    try {
+        const docSnap = await getDoc(doc(db, "users", userId));
+
+        return {address: "", birthdate: "", email: "", firstname: "", lastname: "", prodno: "", ...docSnap.data()}
+
+    } catch (error) {
+        console.error(error)
+    }
+}
+
+export const changeUserDetails = async (userId: string, userDetails: UserDetail): Promise<void> => {
+    try {
+        await setDoc(doc(db, "users", userId),userDetails);
+    } catch (error) {
+        console.error(error)
+    }
+}
+
+export const sendFeedback = async (feedbackData) => {
+    try {
+        const docRef = doc(collection(db, "feedback"))
+
+        await setDoc(docRef, feedbackData)
+
+    } catch (error) {
+        console.error(error)
+    }
+}

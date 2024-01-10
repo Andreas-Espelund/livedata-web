@@ -4,34 +4,35 @@ import {Simulate} from "react-dom/test-utils";
 import change = Simulate.change;
 
 
-interface GenderSelectorProps {
+interface BottleSelectorProps {
     field: any,
     fieldState: any,
 }
-export const GenderSelector = ({field, fieldState}: GenderSelectorProps) => {
+export const BottleSelector = ({field, fieldState}: BottleSelectorProps) => {
 
-    const genders = [
+    const values = [
         {
-            value: "female",
-            label: "Søye"
+            value: "0",
+            label: "Nei"
         },
         {
-            value: "male",
-            label: "Veir"
+            value: "1",
+            label: "Ja"
         },
     ]
 
     const changeHandler = (selection: Selection) => {
         field.onChange(Array.from(selection)[0])
     }
+    console.log(field.value)
     return (
         <Select
-            label={"Kjønn"}
             className={"min-w-[100px]"}
             errorMessage={fieldState.error?.message}
             onSelectionChange={changeHandler}
             selectionMode={"single"}
-            items={genders}
+            items={values}
+            defaultSelectedKeys={new Set([field.value])}
         >
             {item => <SelectItem key={item.value}>{item.label}</SelectItem>}
         </Select>

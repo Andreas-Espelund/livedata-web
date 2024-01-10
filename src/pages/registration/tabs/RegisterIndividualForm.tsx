@@ -14,6 +14,8 @@ import {addIndividual} from "@/api/firestore";
 import {Context} from "@/App";
 import firebase from "firebase/compat";
 import {BreederSelector} from "@/components/BreederSelector";
+import {useAppContext} from "@/context/AppContext";
+import {InfoPopover} from "@/components";
 
 const RegisterIndividualForm = () => {
     const {handleSubmit, control, formState: {isValid}} = useForm({
@@ -27,7 +29,7 @@ const RegisterIndividualForm = () => {
         }
     });
 
-    const {user} = useContext(Context)
+    const {user} = useAppContext()
     const [loading, setLoading] = useState(false)
     const [success, setSuccess] = useState(false)
     const [error, setError] = useState(false)
@@ -63,8 +65,12 @@ const RegisterIndividualForm = () => {
         <>
 
             <Card>
-                <CardHeader>
+                <CardHeader className={"flex justify-between"}>
                     <Heading2>Innmelding</Heading2>
+                    <InfoPopover>
+                        <p className={"font-medium"}> Tips </p>
+                        <p> La mor og far stå tom viss dei ikkje er i lista </p>
+                    </InfoPopover>
                 </CardHeader>
                 <CardBody className={""}>
                     <form onSubmit={handleSubmit(onSubmit)}>

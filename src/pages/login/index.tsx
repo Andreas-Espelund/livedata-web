@@ -1,20 +1,20 @@
-import React, {useContext, useState} from 'react';
-import {useForm, Controller, set} from 'react-hook-form';
+import { useState} from 'react';
+import {useForm, Controller} from 'react-hook-form';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '@/api/firebase.js'; // Update this path
-import {Input, Button, Card, CardFooter, user} from '@nextui-org/react';
+import {Input, Button, Card} from '@nextui-org/react';
 import {CardBody} from "@nextui-org/card";
-import {Navigate, useNavigate} from "react-router-dom";
+import {Navigate, NavLink, useNavigate} from "react-router-dom";
 import {NoticeBox} from "@/components/NoticeBox";
-import {Context} from "@/App";
+import {useAppContext} from "@/context/AppContext";
 
-const LoginPage = () => {
+export const LoginPage = () => {
     const { reset, control, handleSubmit, formState: { errors } } = useForm();
     const [error, setError] = useState(false)
     const [loading, setLoading] = useState(false)
     const navigate = useNavigate()
 
-    const {user} = useContext(Context)
+    const {user} = useAppContext()
     const onSubmit = async (data) => {
         setLoading(true)
         setError(false)
@@ -62,8 +62,8 @@ const LoginPage = () => {
             </Card>
 
             <div className={"grid gap-2"}>
-                <a className={"m-auto italic"} href={"/signup"}> Registrer bruker</a>
-                <a className={"m-auto italic"} href={"/forgot"}> Glemt passord?</a>
+                <NavLink className={"m-auto italic"} to={"/signup"}> Registrer bruker</NavLink>
+                <NavLink className={"m-auto italic"} to={"/forgot"}> Glemt passord?</NavLink>
             </div>
 
             <div className={"fixed top-10  flex right-4"}>
@@ -72,5 +72,3 @@ const LoginPage = () => {
         </div>
     );
 };
-
-export default LoginPage;

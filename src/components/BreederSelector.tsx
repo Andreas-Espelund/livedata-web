@@ -1,6 +1,7 @@
 import React, {useContext} from "react";
 import {Autocomplete, AutocompleteItem} from "@nextui-org/react";
 import {Context} from "@/App";
+import {useAppContext} from "@/context/AppContext";
 
 
 export const BreederSelector = ({label, field, fieldState}: {
@@ -9,7 +10,7 @@ export const BreederSelector = ({label, field, fieldState}: {
     fieldState: any,
 }) => {
 
-    const {breeders} = useContext(Context)
+    const {breeders} = useAppContext()
     return (
         <Autocomplete
             label={label || "Velg et individ"}

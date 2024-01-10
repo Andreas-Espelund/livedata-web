@@ -1,10 +1,10 @@
 import {Row, Stack} from "@/components/Layout";
-import {Card, CardHeader, CardBody, Image, Spacer} from "@nextui-org/react";
+import {Card, CardHeader, CardBody, Image, Spacer, Link} from "@nextui-org/react";
 import NavigationCard from "@/components/NavigationCard";
 import {Heading1} from "@/components/Headings";
 
 
-export default function HomePage() {
+export const HomePage = () => {
 
     return (
         <div className={"flex flex-col gap-10 p-4 md:p-10 m-auto w-fit"}>

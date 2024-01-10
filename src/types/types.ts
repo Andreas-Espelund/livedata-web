@@ -1,3 +1,5 @@
+import { User } from "firebase/auth";
+
 export type Individual = {
     id: string;
     birth_date: string;
@@ -43,4 +45,17 @@ export type MedicineRecord = {
     individual: string;
     date: string;
     medicine: string;
+}
+
+export type AppUser = {
+    authUser: User | undefined;
+    userDetail: UserDetail | undefined;
+}
+export type UserDetail = {
+    firstname: string;
+    lastname: string;
+    birthdate: string;
+    address: string;
+    prodno: string;
+    email: string;
 }

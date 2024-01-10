@@ -1,29 +1,42 @@
-import {Heading1} from "@/components/Headings";
-import React, {useContext, useEffect, useState} from "react";
-import {Context} from "@/App";
+import { useEffect, useState} from "react";
+
 import {
-    Button, Checkbox, Chip, Dropdown, DropdownItem, DropdownMenu, DropdownTrigger,
+    Button,
+    Checkbox,
+    Chip,
+    Dropdown,
+    DropdownItem,
+    DropdownMenu,
+    DropdownTrigger,
     Input,
     Modal,
     ModalBody,
     ModalContent,
-    ModalFooter,
-    ModalHeader, Spacer, Table, TableBody, TableCell, TableColumn, TableHeader, TableRow,
+    ModalHeader,
+    Table,
+    TableBody,
+    TableCell,
+    TableColumn,
+    TableHeader,
+    TableRow,
     useDisclosure
 } from "@nextui-org/react";
-import {Controller, set, useForm} from "react-hook-form";
-import {formatDate} from "@/api/utils";
+
+import {Heading1} from "@/components/Headings";
+import {Controller, useForm} from "react-hook-form";
+
 import {PlusIcon, VerticalDotsIcon} from "@/images/icons";
 import {Breeder} from "@/types/types";
 import {addBreeder, updateBreederStatus} from "@/api/firestore";
-import {NoticeBox} from "@/components/NoticeBox";
-import NoticeWrapper from "@/components/NoticeWrapper";
+import {NoticeBox, NoticeWrapper} from "@/components/";
+import {useAppContext} from "@/context/AppContext";
 
-export const Bucks = () => {
+export const BreedersPage = () => {
     const {isOpen, onOpen, onOpenChange} = useDisclosure();
     const {handleSubmit, control, formState: {isValid}} = useForm({
         mode: 'onChange', // Validate the form on each change
     });
+
 
     const [loading, setLoading] = useState(false)
     const [success, setSuccess] = useState(false)
@@ -31,7 +44,7 @@ export const Bucks = () => {
     const [showInactive, setShowInactive ] = useState(false)
 
     const [rows, setRows] = useState<Breeder[]>([])
-    const { breeders, user } =useContext(Context)
+    const { breeders, user } = useAppContext()
 
     useEffect(() => {
         let filteredItems = breeders
@@ -179,6 +192,3 @@ export const Bucks = () => {
         </div>
     )
 }
-
-
-export default Bucks;

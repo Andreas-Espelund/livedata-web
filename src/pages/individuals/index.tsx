@@ -1,12 +1,12 @@
-import React, {useContext, useEffect} from "react";
+import React, { useEffect} from "react";
 import {
-    Button, ButtonGroup,
+    Button,
     Chip,
     Dropdown,
     DropdownItem,
     DropdownMenu,
     DropdownTrigger,
-    Input, Modal, ModalBody, ModalHeader,
+    Input,
     Pagination,
     Selection,
     Slider,
@@ -19,12 +19,13 @@ import {
     TableRow, Tooltip, useDisclosure
 } from "@nextui-org/react";
 
-import { SearchIcon, VerticalDotsIcon} from "../../public/icons";
-import {Context} from "@/App";
+import { SearchIcon, VerticalDotsIcon} from "../../../public/icons";
 import {Individual} from "@/types/types";
 import {Heading1} from "@/components/Headings";
 import {PlusIcon} from "@/images/icons";
-import MedicineRegistrationModal from "@/components/MedicineRegistrationModal";
+import MedicineRegistrationModal from "@/pages/individuals/MedicineRegistrationModal";
+import {useAppContext} from "@/context/AppContext";
+import {NavLink} from "react-router-dom";
 
 
 const columns = [
@@ -70,13 +71,11 @@ const get_local_or_default_value = (key: string): any => {
 };
 
 
-export default function IndividualsPage() {
-
+export const  IndividualsPage = () => {
     const {isOpen, onOpen, onOpenChange} = useDisclosure();
-
+    const {individuals} = useAppContext()
 
     const currentYear = new Date().getFullYear()
-    const {individuals, user} = useContext(Context)
     const [filterValue, setFilterValue] = React.useState("");
     const [selectedKeys, setSelectedKeys] = React.useState<Selection>(new Set([]));
     const [visibleColumns, setVisibleColumns] = React.useState<Selection>(new Set(get_local_or_default_value("columns")));
@@ -209,8 +208,8 @@ export default function IndividualsPage() {
         switch (columnKey) {
             case "id":
                 return (
-                    <a href={`/individuals/${cellValue}`}
-                          className={"hover:underline hover:font-semibold transition-all"}>{cellValue}</a>
+                    <NavLink to={`/individuals/${cellValue}`}
+                          className={"hover:underline hover:font-semibold transition-all"}>{cellValue}</NavLink>
                 );
             case "birth_date":
                 return (
@@ -484,8 +483,9 @@ export default function IndividualsPage() {
                 topContentPlacement="outside"
                 onSelectionChange={setSelectedKeys}
                 onSortChange={setSortDescriptor}
+
             >
-                <TableHeader columns={headerColumns}>
+                <TableHeader columns={headerColumns} >
                     {(column) => (
                         <TableColumn
                             key={column.uid}

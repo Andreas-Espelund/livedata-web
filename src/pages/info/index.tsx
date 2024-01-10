@@ -3,6 +3,7 @@ import {Accordion, AccordionItem, Button, Card, Skeleton} from "@nextui-org/reac
 import {CardBody, CardHeader} from "@nextui-org/card";
 import {ChevronLeft} from "@/images/icons";
 import {useNavigate} from "react-router-dom";
+import {Feedbackform} from "@/pages/info/Feedbackform";
 
 const Placholder = () => {
     return (
@@ -25,7 +26,7 @@ const Placholder = () => {
     )
 }
 
-const Info = () => {
+export const InfoPage = () => {
 
     const navigate = useNavigate()
 
@@ -78,8 +79,10 @@ const Info = () => {
 
             </div>
 
+            <Heading1>Gi en tilbakemelding</Heading1>
+
+            <Feedbackform/>
+
         </div>
     )
 }
-
-export default Info

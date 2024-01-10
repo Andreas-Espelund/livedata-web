@@ -1,15 +1,16 @@
-import {Button, Card, CardFooter, Input} from "@nextui-org/react";
-import {CardBody} from "@nextui-org/card";
+import {useState} from "react";
+
+import {Button, Card, CardBody, Input} from "@nextui-org/react";
+import {NoticeWrapper, NoticeBox} from "@/components";
+
 import {Controller, useForm} from "react-hook-form";
-import {NoticeBox} from "@/components/NoticeBox";
-import React, {useState} from "react";
 
 import {auth} from "@/api/firebase";
 import { sendPasswordResetEmail } from "firebase/auth";
-import NoticeWrapper from "@/components/NoticeWrapper";
+import {NavLink} from "react-router-dom";
 
 
-const ForgotPassword = () => {
+export const ForgotPage = () => {
     const { reset, control, handleSubmit, formState: { errors } } = useForm();
 
     const [resetSent, setResetSent] = useState(false);
@@ -48,8 +49,8 @@ const ForgotPassword = () => {
                 </CardBody>
             </Card>
             <div className={"grid gap-2"}>
-                <a className={"m-auto italic"} href={"/login"}> Tilbake til innlogging</a>
-                <a className={"m-auto italic"} href={"/signup"}> Ingen bruker, lag en her!</a>
+                <NavLink className={"m-auto italic"} to={"/login"}> Tilbake til innlogging</NavLink>
+                <NavLink className={"m-auto italic"} to={"/signup"}> Ingen bruker, lag en her!</NavLink>
             </div>
 
             <NoticeWrapper>
@@ -59,5 +60,3 @@ const ForgotPassword = () => {
         </div>
     )
 }
-
-export default ForgotPassword

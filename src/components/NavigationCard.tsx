@@ -1,4 +1,5 @@
 import {Card, CardBody, CardHeader, Image} from "@nextui-org/react";
+import {NavLink} from "react-router-dom";
 
 
 interface NavigationCardProps {
@@ -12,7 +13,7 @@ interface NavigationCardProps {
 
 export default function NavigationCard({title, subtitle, image, alt, href}: NavigationCardProps){
     return (
-        <a href={href} className={"cursor-pointer hover:scale-[102%] focus:scale-[102%] active:scale-[99%] hover:outline-primary focus:outline-primary transition-all rounded-[16px]"}>
+        <NavLink to={href} className={"cursor-pointer hover:scale-[102%] focus:scale-[102%] active:scale-[99%] hover:outline-primary focus:outline-primary transition-all rounded-[16px]"}>
             <Card className="py-4 max-w-[400px]">
                 <CardHeader className="pb-0 pt-2 px-4 flex-col items-start">
                     <p className="text-tiny uppercase font-bold">{subtitle}</p>
@@ -26,7 +27,7 @@ export default function NavigationCard({title, subtitle, image, alt, href}: Navi
                     />
                 </CardBody>
             </Card>
-        </a>
+        </NavLink>
 
     )
 }

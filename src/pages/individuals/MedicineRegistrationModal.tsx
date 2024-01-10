@@ -9,20 +9,25 @@ import {
     Modal,
     ModalBody,
     ModalContent,
-    ModalFooter,
-    ModalHeader, Progress, user
+    ModalHeader,
+    Progress
 } from '@nextui-org/react';
 import {Controller, useForm} from "react-hook-form";
 import {Input} from "@nextui-org/input";
-import {Row, Stack} from "@/components/Layout";
-import Message from "@/components/Message";
+
+import {ChevronDownIcon} from "@/images/icons";
 import {formatDate} from "@/api/utils";
 import {Individual} from "@/types/types";
-import {addMedicineRecord, addNoteRecord} from "@/api/firestore";
-import {Context} from "@/App";
-import NoticeWrapper from "@/components/NoticeWrapper";
-import {NoticeBox} from "@/components/NoticeBox";
-import {ChevronDownIcon} from "@/images/icons";
+import {addMedicineRecord} from "@/api/firestore";
+
+import {useAppContext} from "@/context/AppContext";
+
+import {
+    Row,
+    Stack,
+    NoticeWrapper,
+    NoticeBox
+} from '@/components'
 
 interface MedicineRegistrationModalProps {
     isOpen: boolean;
@@ -45,7 +50,7 @@ function validateDate(date: string): string | undefined {
 
 
 const MedicineRegistrationModal = ({isOpen, onClose, selectedRows}: MedicineRegistrationModalProps) => {
-    const {user} = useContext(Context)
+    const {user} = useAppContext()
     const [isLoading, setLoading] = useState(false)
     const [error, setError] = useState(false)
     const [success, setSuccess] = useState(false)

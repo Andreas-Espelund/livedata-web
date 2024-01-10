@@ -1,29 +1,18 @@
-import React, {useContext, useState} from "react";
+import {useState} from "react";
 import {Controller, useForm} from "react-hook-form";
-import {Button, Textarea, Image, CardFooter} from "@nextui-org/react";
-import {Card, CardBody, CardHeader} from "@nextui-org/card";
-import {Row, Stack} from "@/components/Layout";
-import {Heading2} from "@/components/Headings";
-import {IndividualSelector} from "@/components/IndividualSelector";
-import {NoticeBox} from "@/components/NoticeBox";
-import NoticeWrapper from "@/components/NoticeWrapper";
-import {Context} from "@/App";
-import {formatDate} from "@/api/utils";
-import {NoteRecord, StatusRecord} from "@/types/types";
-import {addNoteRecord, updateIndividualStatus} from "@/api/firestore";
-import {Input} from "@nextui-org/input";
 
-const individualOptions = [
-    {value: 1, label: "10010"},
-    {value: 2, label: "20020"},
-    {value: 3, label: "30030"},
-    // ... add more individuals
-];
+import {Input, Button, Textarea, Card, CardBody, CardHeader} from "@nextui-org/react";
+import {IndividualSelector, Stack, Heading2, NoticeBox, NoticeWrapper, InfoPopover} from "@/components";
+
+import {formatDate} from "@/api/utils";
+import {NoteRecord} from "@/types/types";
+import {addNoteRecord} from "@/api/firestore";
+import {useAppContext} from "@/context/AppContext";
 
 
 const NoteForm = () => {
 
-    const {user} = useContext(Context)
+    const {user} = useAppContext()
     const [success, setSuccess]  = useState(false)
     const [failure, setFailure]  = useState(false)
     const [loading, setLoading] = useState(false)
@@ -67,8 +56,12 @@ const NoteForm = () => {
     return (
         <>
             <Card>
-                <CardHeader>
+                <CardHeader className={"flex justify-between"}>
                     <Heading2>Nytt notat</Heading2>
+                    <InfoPopover>
+                        <p className={"font-semibold"}>Tips</p>
+                        <p>Medisin bør registrerast som helsedata</p>
+                    </InfoPopover>
                 </CardHeader>
                 <CardBody>
                     <form onSubmit={handleSubmit(onSubmit)}>
@@ -121,8 +114,8 @@ const NoteForm = () => {
                 </CardBody>
             </Card>
             <NoticeWrapper>
-                {failure && <NoticeBox title={"Noke gjekk gale"} message={"Kunne ikkje lagre notat"} type={"danger"}/>}
-                {success && <NoticeBox title={"Suksess"} message={"Ny notat registrert"} type={"success"}/>}
+                {failure && <NoticeBox title={"Noke gjekk gale"} message={"Kunne ikkje lagre notat"} type={"danger"} />}
+                {success && <NoticeBox title={"Suksess"} message={"Ny notat registrert"} type={"success"} />}
             </NoticeWrapper>
         </>
     );

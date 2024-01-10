@@ -1,6 +1,7 @@
 import React, {useContext} from "react";
 import {Autocomplete, AutocompleteItem} from "@nextui-org/react";
 import {Context} from "@/App";
+import {useAppContext} from "@/context/AppContext";
 
 
 export const IndividualSelector = ({label, field, fieldState, gender} : {
@@ -10,7 +11,7 @@ export const IndividualSelector = ({label, field, fieldState, gender} : {
     gender: "male" | "female" | undefined
 }) => {
 
-    const {individuals} = useContext(Context)
+    const {individuals} = useAppContext()
 
     const filtered = gender === undefined ? individuals : individuals.filter((ind) => ind.gender === gender)
 

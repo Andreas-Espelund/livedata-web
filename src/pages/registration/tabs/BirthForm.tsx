@@ -1,6 +1,8 @@
+import {useState} from "react";
+
+import {Controller, useFieldArray, useForm} from "react-hook-form";
+
 import {
-    Autocomplete,
-    AutocompleteItem,
     Button,
     Card,
     CardBody,
@@ -14,24 +16,29 @@ import {
     Image,
     Divider
 } from "@nextui-org/react";
-import {Stack} from "@/components/Layout";
-import {Controller, useFieldArray, useForm} from "react-hook-form";
-import {IndividualSelector} from "@/components/IndividualSelector";
-import React, {useContext, useState} from "react";
-import {GenderSelector} from "@/components/GenderSelector";
-import {Heading2, Heading4} from "@/components/Headings";
-import {BreederSelector} from "@/components/BreederSelector";
-import {NoticeBox} from "@/components/NoticeBox";
-import NoticeWrapper from "@/components/NoticeWrapper";
+
+import {
+    Stack,
+    IndividualSelector,
+    GenderSelector,
+    Heading2,
+    Heading4,
+    BreederSelector,
+    NoticeBox,
+    NoticeWrapper,
+    BottleSelector, InfoPopover
+} from "@/components/";
+
+
 import {BirthRecord, Individual} from "@/types/types";
 import {addBirthRecord, addIndividual} from "@/api/firestore";
-import {Context} from "@/App";
 import {formatDate} from "@/api/utils";
+import {useAppContext} from "@/context/AppContext";
 
 const BirthForm = () => {
 
     // validation state
-    const {user} = useContext(Context);
+    const {user} = useAppContext();
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
@@ -40,7 +47,7 @@ const BirthForm = () => {
     const {handleSubmit, control, formState: {isValid}, reset} = useForm({
         mode: 'onChange', // Validate the form on each change
         defaultValues: {
-            lambs: [{id: '', gender: '', bottle: '0',}],
+            lambs: [{id: '', gender: '', bottle: "0",}],
             mother: '',
             father: '',
             date: formatDate(new Date()),
@@ -55,6 +62,7 @@ const BirthForm = () => {
     });
 
     const onSubmit = async (data: any) => {
+        if (!user || !user.authUser) return;
         setIsLoading(true)
         const record: BirthRecord = {
             date: data.date, father: data.father, lambs: data.lambs.map(e => e.id), mother: data.mother, note: data.note
@@ -74,8 +82,8 @@ const BirthForm = () => {
             return ind
         })
 
-        var promises = lambs.map(e => addIndividual(user?.uid, e))
-        promises.push(addBirthRecord(user?.uid, data.mother, record))
+        var promises = lambs.map(e => addIndividual(user?.authUser?.uid, e))
+        promises.push(addBirthRecord(user?.authUser.uid, data.mother, record))
 
         try {
             await Promise.all(promises)
@@ -98,35 +106,11 @@ const BirthForm = () => {
 
     return (
         <Card>
-
             <CardHeader className={"flex justify-between"}>
                 <Heading2>Ny Lamming</Heading2>
-                <Popover placement="right-end">
-                    <PopoverTrigger>
-                        <Button isIconOnly color="warning" variant="light">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5}
-                                 stroke="currentColor" className="w-6 h-6">
-                                <path strokeLinecap="round" strokeLinejoin="round"
-                                      d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z"/>
-                            </svg>
-                        </Button>
-                    </PopoverTrigger>
-                    <PopoverContent>
-                        <div>
-                            <ul className="px-1 py-2">
-                                <li className="font-bold">Tips</li>
-                                <li className="text-small list-disc ml-3">Trykk 'n' for å legge til lam</li>
-                                <li className="text-small list-disc ml-3">Dødt før merking - dødfødt</li>
-                            </ul>
-                            <Image
-                                src={"/public/hospital.png"}
-                                className={"object-cover aspect-video"}
-                                width={200}
-                            />
-                        </div>
-
-                    </PopoverContent>
-                </Popover>
+                <InfoPopover>
+                    <p>test</p>
+                </InfoPopover>
             </CardHeader>
             <CardBody className={""}>
                 <form onSubmit={handleSubmit(onSubmit)}>
@@ -163,9 +147,8 @@ const BirthForm = () => {
                         />
                         <Heading4> Lam </Heading4>
                         {fields.map((field, index) => (
-                            <div key={field.id}>
-                                <div
-                                     className="grid md:grid-cols-3 w-full items-center gap-4">
+                            <div key={field.id} className={"w-full"}>
+                                <div className="grid md:grid-cols-2 w-full items-center gap-4">
                                     <Controller
                                         name={`lambs.${index}.id`}
                                         control={control}
@@ -179,7 +162,7 @@ const BirthForm = () => {
                                         }}
                                         render={({field, fieldState}) => (
                                             <Input {...field} placeholder="ID (Øremerkenummer)" label={`Lam ${index + 1}`}
-                                                   className={"col-span-2"} errorMessage={fieldState.error?.message}/>
+                                                   className={"col-span-1"} errorMessage={fieldState.error?.message}/>
                                         )}
                                     />
 
@@ -198,20 +181,10 @@ const BirthForm = () => {
                                         <Controller
                                             name={`lambs.${index}.bottle`}
                                             control={control}
-                                            defaultValue={field.gender}
+                                            defaultValue={field.bottle}
                                             rules={{ required: 'Velg kopp' }}
                                             render={({field, fieldState}) => (
-                                                <Autocomplete
-                                                    label={"Kopplam?"}
-                                                    value={0}
-                                                    onSelectionChange={(e) => field.onChange(e)}
-                                                    defaultInputValue={"Nei"}
-                                                    errorMessage={fieldState.error?.message}
-                                                >
-                                                    <AutocompleteItem textValue="Ja" value={1} key={1}> Ja </AutocompleteItem>
-                                                    <AutocompleteItem textValue="Nei" value={0} key={0}> Nei </AutocompleteItem>
-
-                                                </Autocomplete>
+                                                <BottleSelector field={field} fieldState={fieldState}/>
                                             )}
                                         />
 

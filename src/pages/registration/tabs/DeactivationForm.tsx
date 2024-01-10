@@ -2,20 +2,17 @@ import React, {useContext, useState} from "react";
 import {Controller, useForm} from "react-hook-form";
 import {Autocomplete, AutocompleteItem, Button, CardFooter, Textarea} from "@nextui-org/react";
 import {Card, CardBody, CardHeader} from "@nextui-org/card";
-import {Stack} from "@/components/Layout";
-import {Heading2} from "@/components/Headings";
 import {Input} from "@nextui-org/input";
-import {IndividualSelector} from "@/components/IndividualSelector";
 import {formatDate} from "@/api/utils";
 import {updateIndividualStatus} from "@/api/firestore";
-import {Context} from "@/App";
-import NoticeWrapper from "@/components/NoticeWrapper";
-import {Simulate} from "react-dom/test-utils";
-import {NoticeBox} from "@/components/NoticeBox";
+
 import {StatusRecord} from "@/types/types";
+import {useAppContext} from "@/context/AppContext";
+
+import {IndividualSelector, Stack, Heading2, NoticeBox, NoticeWrapper, InfoPopover} from "@/components";
 
 const DeactivationForm = () => {
-    const {user} = useContext(Context)
+    const {user} = useAppContext()
     const [success, setSuccess]  = useState(false)
     const [failure, setFailure]  = useState(false)
     const [loading, setLoading] = useState(false)
@@ -31,16 +28,14 @@ const DeactivationForm = () => {
     });
 
     const onSubmit = async (data) => {
+
+        if (!user || !user.authUser) return;
         setLoading(true)
         try {
-            console.log(user?.uid, data)
-
             const statusRecord : StatusRecord = {
                 date: data.date, individual: data.individual, note: data.note, status: data.status
-
             }
-            await updateIndividualStatus(user.uid, statusRecord)
-
+            await updateIndividualStatus(user.authUser.uid, statusRecord)
 
             setSuccess(true)
             reset()
@@ -60,8 +55,12 @@ const DeactivationForm = () => {
     return (
         <>
         <Card>
-            <CardHeader>
+            <CardHeader className={"flex justify-between"}>
                 <Heading2>Utmelding</Heading2>
+                <InfoPopover>
+                    <p className={"font-semibold"}>Tips</p>
+                    <p>Dersom ingen av kategoriane passar, velg 'Annet' og skriv ein kommentar</p>
+                </InfoPopover>
             </CardHeader>
             <CardBody>
                 <form onSubmit={handleSubmit(onSubmit)}>
