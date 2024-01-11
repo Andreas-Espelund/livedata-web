@@ -6,7 +6,7 @@ import {
     DropdownItem,
     DropdownMenu,
     DropdownTrigger,
-    Input,
+    Input, Modal,
     Pagination,
     Selection,
     Slider,
@@ -22,10 +22,13 @@ import {
 import { SearchIcon, VerticalDotsIcon} from "../../../public/icons";
 import {Individual} from "@/types/types";
 import {Heading1} from "@/components/Headings";
-import {PlusIcon} from "@/images/icons";
+import {PlusIcon, PrinterIcon} from "@/images/icons";
 import MedicineRegistrationModal from "@/pages/individuals/MedicineRegistrationModal";
 import {useAppContext} from "@/context/AppContext";
 import {NavLink} from "react-router-dom";
+
+import PdfGenerator, {generatePdf} from "@/util/GeneratePDF";
+import ExportModal from "@/pages/individuals/ExportModal";
 
 
 const columns = [
@@ -39,7 +42,7 @@ const columns = [
     {name: "VALG", uid: "actions"},
 ];
 
-const statusMap = {
+export const statusMap = {
     "active": "Aktiv",
     "lost_in": "Tapt innmark",
     "lost_out": "Tapt utmark",
@@ -388,8 +391,8 @@ export const  IndividualsPage = () => {
                                 </DropdownMenu>
                             </Dropdown>
                         </div>
-                        <Button isDisabled={keyArray.length === 0} onPress={onOpen} variant={"shadow"} size={"lg"} color={"primary"} startContent={<PlusIcon/>}>
-                            Medisin
+                        <Button onPress={onOpen} variant={"shadow"} size={"lg"} color={"primary"} startContent={<PrinterIcon/>}>
+                            Skriv ut
                         </Button>
                     </div>
                 </div>
@@ -504,7 +507,7 @@ export const  IndividualsPage = () => {
                     )}
                 </TableBody>
             </Table>
-            <MedicineRegistrationModal isOpen={isOpen} onClose={onOpenChange} selectedRows={modalItems}/>
+            <ExportModal isOpen={isOpen} onClose={onOpenChange} individuals={filteredItems} columns={visibleColumns}/>
         </div>
     );
 }

@@ -12,6 +12,7 @@ import {ForgotPage} from "@/pages/forgotPassword";
 import {InfoPage} from "@/pages/info";
 import {BreedersPage} from "@/pages/breeders";
 import {SettingsPage} from "@/pages/settings";
+import {DocumentView} from "@/pages/documentView";
 
 
 
@@ -59,6 +60,10 @@ function App() {
     {
       path: '/settings',
       element: protectRoute(<SettingsPage/>)
+    },
+    {
+      path: '/document',
+      element: protectRoute(<DocumentView/>)
     }
   ])
   return (

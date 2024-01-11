@@ -1,7 +1,5 @@
-import {Row, Stack} from "@/components/Layout";
-import {Card, CardHeader, CardBody, Image, Spacer, Link} from "@nextui-org/react";
 import NavigationCard from "@/components/NavigationCard";
-import {Heading1} from "@/components/Headings";
+
 
 
 export const HomePage = () => {
@@ -32,6 +30,8 @@ export const HomePage = () => {
                     href="/settings"
                 />
             </div>
+
+
         </div>
     )
 }
