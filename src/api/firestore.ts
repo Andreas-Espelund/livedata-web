@@ -1,7 +1,8 @@
-import {collection, doc, getDoc, getDocs, orderBy, query, setDoc, updateDoc} from 'firebase/firestore'
+import {collection, doc, getDoc, getDocs, onSnapshot, orderBy, query, setDoc, updateDoc} from 'firebase/firestore'
 import {db} from '@/api/firebase'
 import {Breeder, Individual, MedicineRecord, NoteRecord, StatusRecord, UserDetail} from "@/types/types";
 import {user} from "@nextui-org/react";
+import {initializeApp} from "firebase/app";
 
 
 export const addIndividual = async (userId, individual) => {
@@ -73,22 +74,57 @@ export const getAllIndividuals = async (userId: string): Promise<Individual[]> =
     }
 };
 
+export const individualListener = (userID, updateFunction) => {
+    const q = query(collection(db, "users", userID, "individuals"), orderBy("id", "asc"));
+
+    const unsubscribe = onSnapshot(q, async (querySnapshot) => {
+        console.log("new individual snapshot")
+        const individuals = new Map<string, Individual>();
+
+        // Finally, create the individuals array with parent data
+        querySnapshot.docs.forEach((doc) => {
+            const individualData = doc.data();
+
+
+            const motherRef = individualData.mother ?  individualData.mother.path.split('/').pop() : ""
+            const fatherRef = individualData.father ?  individualData.father.path.split('/').pop() : ""
+            individualData.mother = motherRef;
+            individualData.father = fatherRef;
+            individuals.set(doc.id, { ...individualData, doc: doc.id})
+        });
+
+
+
+        updateFunction(individuals);
+    });
+
+    return unsubscribe;
+};
+
+
+
 
 export const addBreeder = async (userId: string, breeder: Breeder) => {
     const individualRef = doc(collection(db, "users", userId, "breeders"));
     await setDoc(individualRef, breeder)
 }
 
-export const getBreeders = async (userId: string): Promise<Breeder[]> => {
+export const getBreedersListener = (userId: string, updateFunction) => {
     const breederColRef = collection(db, "users", userId, "breeders");
     const q = query(breederColRef, orderBy("status", "asc")); // Ordering by 'status'
 
-    const snapshot = await getDocs(q);
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+        const breeders = new Map<string, Breeder>()
 
-    return snapshot.docs.map(doc => {
-        const b:Breeder = {birth_date: doc.data().birth_date, doc: doc.id, id: doc.data().id, nickname: doc.data().nickname, status: doc.data().status}
-        return b
+        snapshot.forEach((doc) => {
+            const b:Breeder = {birth_date: doc.data().birth_date, doc: doc.id, id: doc.data().id, nickname: doc.data().nickname, status: doc.data().status}
+            breeders.set(b.doc, b)
+        })
+
+        updateFunction(breeders)
     })
+
+    return unsubscribe
 }
 
 export const updateBreederStatus = async (userId, breederId, newStatus) => {

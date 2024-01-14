@@ -76,7 +76,7 @@ const get_local_or_default_value = (key: string): any => {
 
 export const  IndividualsPage = () => {
     const {isOpen, onOpen, onOpenChange} = useDisclosure();
-    const {individuals} = useAppContext()
+    const {individuals, breeders} = useAppContext()
 
     const currentYear = new Date().getFullYear()
     const [filterValue, setFilterValue] = React.useState("");
@@ -136,7 +136,7 @@ export const  IndividualsPage = () => {
     const hasSearchFilter = Boolean(filterValue);
 
     const filteredItems = React.useMemo(() => {
-        let filtered = [...individuals];
+        let filtered = [...individuals.values()]
 
         // apply search filter
         if (hasSearchFilter) {
@@ -199,7 +199,7 @@ export const  IndividualsPage = () => {
 
     // for medicine modal
     const keyArray = Array.from(selectedKeys)
-    const modalItems = selectedKeys === "all" ? filteredItems : individuals.filter(e => keyArray.includes(e.doc))
+    //const modalItems = selectedKeys === "all" ? filteredItems : individuals.filter(e => keyArray.includes(e.doc))
 
 
     /*
@@ -243,26 +243,28 @@ export const  IndividualsPage = () => {
                     </div>
                 );
             case "father":
-
                 if (Object.keys(cellValue).length === 0) {
                     return <p>-</p>
                 } else {
-                    return (
-                        <div>
-                            <p className={"text-sm font-medium"}>{cellValue.nickname}</p>
-                            <p className={"text-tiny text-zinc-600"}>{cellValue.id}</p>
-                        </div>
-                    );
+                    const father = breeders.get(cellValue)
+
+                    if (father) {
+                        return (
+                            <div>
+                                <p className={"text-sm font-medium"}>{father.nickname}</p>
+                                <p className={"text-tiny text-zinc-600"}>{father.id}</p>
+                            </div>
+                        );
+                    } else {
+                        return <p>-</p>
+                    }
+
                 }
             case "mother":
-                if (Object.keys(cellValue).length === 0) {
-                    return <p>-</p>
-                } else {
-                    return (
-                        <p>{cellValue.id}</p>
-                    );
-                }
 
+                return (
+                    <p>{individuals.get(cellValue)?.id || '-'}</p>
+                );
             case "gender":
                 return (
                     <Chip className="capitalize" color={cellValue == "male"? 'primary' : 'secondary'} size="sm"
@@ -278,7 +280,7 @@ export const  IndividualsPage = () => {
             default:
                 return cellValue;
         }
-    }, []);
+    }, [individuals]);
 
 
     // page handling
@@ -468,7 +470,7 @@ export const  IndividualsPage = () => {
 
 
     return (
-        <div className="w-full lg:w-4/5 m-auto p-4 sm:p-8 ">
+        <div className="w-full lg:w-4/5 m-auto p-4 sm:p-8">
 
             <Table
                 aria-label="Example table with custom cells, pagination and sorting"
@@ -476,9 +478,7 @@ export const  IndividualsPage = () => {
                 isStriped
                 bottomContent={bottomContent}
                 bottomContentPlacement="outside"
-                classNames={{
-                    wrapper: "max-h-[90vh]",
-                }}
+                className={"sm:max-h-[85vh]"}
                 selectedKeys={selectedKeys}
                 selectionMode="multiple"
                 sortDescriptor={sortDescriptor}

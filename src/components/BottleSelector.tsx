@@ -24,7 +24,6 @@ export const BottleSelector = ({field, fieldState}: BottleSelectorProps) => {
     const changeHandler = (selection: Selection) => {
         field.onChange(Array.from(selection)[0])
     }
-    console.log(field.value)
     return (
         <Select
             className={"min-w-[100px]"}

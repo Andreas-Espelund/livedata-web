@@ -2,33 +2,41 @@ import React, {createContext, ReactNode, useCallback, useContext, useEffect, use
 import {onAuthStateChanged} from "firebase/auth";
 import {AppUser, Breeder, Individual} from "@/types/types";
 import {auth} from "@/api/firebase";
-import {getAllIndividuals, getBreeders, getUserDetails} from "@/api/firestore";
+import { getBreedersListener, getUserDetails, individualListener} from "@/api/firestore";
+
+
 
 interface AppContextProps {
-    individuals: Individual[];
-    breeders: Breeder[];
+    individuals: Map<string, Individual>;
+    breeders: Map<string, Breeder>;
     user: AppUser | undefined;
     getIndividual: (doc: string) => Individual | undefined;
+    getIndividualFromID: (id: string) => Individual | undefined;
+    getBreederFromID: (id: string) => Breeder | undefined;
     size: "sm" | "md" | "lg";
     loading: boolean;
 }
 
 export const AppContext = createContext<AppContextProps>({
-    individuals: [], breeders: [], getIndividual(): Individual | undefined {
-        return undefined;
-    }, loading: true, size: "md", user: undefined
+    individuals: new Map<string, Individual>(),
+    breeders: new Map<string, Breeder>,
+    getIndividual(): Individual | undefined {return undefined;},
+    getIndividualFromID(): Individual | undefined {return undefined},
+    getBreederFromID(): Breeder | undefined {return undefined},
+    loading: true,
+    size: "md",
+    user: undefined,
 });
 
 interface AppProviderProps {
     children: ReactNode;
 }
 export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
-    const [individuals, setIndividuals] = useState<Individual[]>([]);
+    const [individuals, setIndividuals] = useState<Map<string, Individual>>(new Map());
     const [breeders, setBreeders] = useState<Breeder[]>([]);
     const [user, setUser] = useState<AppUser | undefined>(undefined);
     const [size, setSize] = useState<"sm" | "md" | "lg">("md");
     const [loading, setLoading] = useState(true)
-    const [isDataFetched, setDataFetched] = useState(false)
 
 
     // Window resize event handler
@@ -47,15 +55,18 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
 
     // Fetch data when user state changes
     useEffect(() => {
-        if (!isDataFetched && user && user.authUser) {
-            // Fetch data here
-            console.log("Fetching data")
-            getAllIndividuals(user.authUser?.uid).then(setIndividuals).catch(console.error);
-            getBreeders(user.authUser?.uid).then(setBreeders).catch(console.error);
-
-            setDataFetched(true);
+        if (user && user.authUser) {
+            const unsubscribe = individualListener(user.authUser.uid,setIndividuals)
+            return unsubscribe;
         }
-    }, [user, isDataFetched]);
+    }, [user]);
+
+    useEffect(() => {
+        if (user && user.authUser) {
+            const unsubscribe = getBreedersListener(user.authUser.uid, setBreeders)
+            return unsubscribe
+        }
+    }, [user]);
 
     // Authentication state change
     useEffect(() => {
@@ -80,12 +91,18 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
 
 
     const getIndividual = useCallback((doc: string): Individual | undefined => {
-        return individuals.find(e => e.doc === doc);
+        return individuals.get(doc);
     }, [individuals]);
 
+    const getIndividualFromID = useCallback((id: string): Individual | undefined => {
+        return Array.from(individuals.values()).find(e => e.id === id)
+    }, [individuals])
 
+    const getBreederFromID = useCallback((id: string): Breeder | undefined => {
+        return Array.from(breeders.values()).find(e => e.id === id)
+    }, [breeders])
     return (
-        <AppContext.Provider value={{ individuals, breeders, user, getIndividual, size, loading }}>
+        <AppContext.Provider value={{ individuals, breeders, user, getIndividual, size, loading, getIndividualFromID, getBreederFromID}}>
             {children}
         </AppContext.Provider>
     );

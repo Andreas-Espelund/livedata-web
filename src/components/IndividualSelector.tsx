@@ -13,7 +13,8 @@ export const IndividualSelector = ({label, field, fieldState, gender} : {
 
     const {individuals} = useAppContext()
 
-    const filtered = gender === undefined ? individuals : individuals.filter((ind) => ind.gender === gender)
+    const selectable = Array.from(individuals.values())
+    const filtered = gender === undefined ? selectable : selectable.filter((ind) => ind.gender === gender)
 
     return (
         <Autocomplete

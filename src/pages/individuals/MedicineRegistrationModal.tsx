@@ -66,10 +66,6 @@ const MedicineRegistrationModal = ({isOpen, onClose, selectedRows}: MedicineRegi
     const onSubmit = async (data) => {
         if (!user) return;
         setLoading(true)
-
-        console.log('registering medicine')
-        console.log(data.date)
-        console.log(data.medicine)
         selectedRows.forEach(e => console.log(e.doc))
 
         try {

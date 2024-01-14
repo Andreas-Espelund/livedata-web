@@ -11,6 +11,7 @@ export const BreederSelector = ({label, field, fieldState}: {
 }) => {
 
     const {breeders} = useAppContext()
+    const selectable = Array.from(breeders.values())
     return (
         <Autocomplete
             label={label || "Velg et individ"}
@@ -19,7 +20,7 @@ export const BreederSelector = ({label, field, fieldState}: {
             onSelectionChange={(e) => field.onChange(e)}
             errorMessage={fieldState?.error?.message}
         >
-            {breeders.filter(e => e.status === "active").map(item =>
+            {selectable.filter(e => e.status === "active").map(item =>
                 <AutocompleteItem
                     key={item.doc}
                     textValue={`${item.nickname} (${item.id})`}

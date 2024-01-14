@@ -30,24 +30,25 @@ import {Breeder} from "@/types/types";
 import {addBreeder, updateBreederStatus} from "@/api/firestore";
 import {NoticeBox, NoticeWrapper} from "@/components/";
 import {useAppContext} from "@/context/AppContext";
+import useStatus from "@/hooks/useStatus";
 
 export const BreedersPage = () => {
     const {isOpen, onOpen, onOpenChange} = useDisclosure();
-    const {handleSubmit, control, formState: {isValid}} = useForm({
+    const {handleSubmit, control, formState: {isValid}, reset} = useForm({
         mode: 'onChange', // Validate the form on each change
     });
 
 
-    const [loading, setLoading] = useState(false)
-    const [success, setSuccess] = useState(false)
-    const [failure, setFailure] = useState(false)
+    const {loading, error, success, startLoading, setSuccessState, setErrorState, resetStatus} = useStatus()
     const [showInactive, setShowInactive ] = useState(false)
 
     const [rows, setRows] = useState<Breeder[]>([])
     const { breeders, user } = useAppContext()
 
+    const breederList = Array.from(breeders.values())
+
     useEffect(() => {
-        let filteredItems = breeders
+        let filteredItems = breederList
         if (!showInactive) {
              filteredItems = filteredItems.filter(item => item.status == "active")
         }
@@ -57,12 +58,19 @@ export const BreedersPage = () => {
 
 
     const onSubmit = async (data) => {
-        setLoading(true)
+        startLoading()
         data["status"] = "active";
         console.log(data)
 
-        await addBreeder(user?.uid, data).then(data => { setSuccess(true) }).catch(error => { setFailure(true) })
-        setLoading(false)
+        await addBreeder(user?.authUser?.uid, data)
+            .then(data => setSuccessState())
+            .catch(error => setErrorState(error))
+            .finally(() => {
+                resetStatus();
+                reset();
+                onOpenChange();
+            })
+
     }
 
     const onStatusChange = async () => {
@@ -91,7 +99,7 @@ export const BreedersPage = () => {
                 aria-label={"bucks"}
                 topContentPlacement={"outside"}
                 topContent={<TopContent/>}
-                bottomContent={<p className={"text-small text-default-400 p-2"}>{`Viser ${rows.length} av ${breeders.length} veirar`}</p>}
+                bottomContent={<p className={"text-small text-default-400 p-2"}>{`Viser ${rows.length} av ${breederList.length} veirar`}</p>}
                 bottomContentPlacement={"outside"}
             >
                 <TableHeader>
@@ -121,10 +129,10 @@ export const BreedersPage = () => {
                                     </DropdownTrigger>
                                     <DropdownMenu aria-label={"actions"}>
                                         {e.status === "active" ?
-                                            <DropdownItem onPress={() => updateBreederStatus(user?.uid,e.doc, "inactive")}>
+                                            <DropdownItem onPress={() => updateBreederStatus(user?.authUser?.uid,e.doc, "inactive")}>
                                             Fjern fra aktive veirar
                                             </DropdownItem> :
-                                            <DropdownItem onPress={() => updateBreederStatus(user?.uid,e.doc, "active")}>
+                                            <DropdownItem onPress={() => updateBreederStatus(user?.authUser?.uid,e.doc, "active")}>
                                                 Legg til aktive veirar
                                             </DropdownItem>
                                         }
@@ -147,7 +155,13 @@ export const BreedersPage = () => {
                                        control={control}
                                        name={"id"}
                                        defaultValue={""}
-                                       rules={{required: true}}
+                                       rules={{
+                                           required: "ID mangler",
+                                           pattern: {
+                                               value: /^\d{5}$/,
+                                               message: "ID må være 5-sifret tall"
+                                           }
+                                       }}
                                        render={({field}) =>( <Input {...field} label={"ID (Øremerke)"}/>)}
                                    />
 
@@ -155,7 +169,7 @@ export const BreedersPage = () => {
                                        control={control}
                                        name={"nickname"}
                                        defaultValue={""}
-                                       rules={{required: true}}
+                                       rules={{required: "Skriv inn et kallenavn"}}
                                        render={({field}) =>( <Input {...field} label={"Kallenavn"}/>)}
                                    />
 
@@ -163,7 +177,7 @@ export const BreedersPage = () => {
                                        control={control}
                                        name={"birth_date"}
                                        defaultValue={""}
-                                       rules={{required: true}}
+                                       rules={{required: "Skriv inn en dato"}}
                                        render={({field}) =>( <Input placeholder=" " label="Fødselsdato" {...field} type={"date"} />)}
                                    />
 
@@ -173,7 +187,7 @@ export const BreedersPage = () => {
                                        <Button color="danger" variant="light" onPress={onClose}>
                                            Lukk
                                        </Button>
-                                       <Button color="primary" type="submit" isLoading={loading}>
+                                       <Button color="primary" type="submit" isLoading={loading} isDisabled={!isValid}>
                                            Registrer
                                        </Button>
                                    </div>
@@ -186,7 +200,7 @@ export const BreedersPage = () => {
 
             <NoticeWrapper>
                 {success && <NoticeBox title={"Suksess"} message={"Ny veir lagt til"} type={"success"}/>}
-                {failure && <NoticeBox title={"Feil"} message={"Klarte ikkje å legge til ny veir"} type={"danger"}/>}
+                {error && <NoticeBox title={"Feil"} message={error} type={"danger"}/>}
             </NoticeWrapper>
 
         </div>

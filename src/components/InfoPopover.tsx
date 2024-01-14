@@ -4,9 +4,10 @@ import {ReactNode} from "react";
 
 
 interface InfoPopoverProps {
-    children: ReactNode
+    children: ReactNode,
+    maxWidth: boolean
 }
-export const InfoPopover = ({children}: InfoPopoverProps) => {
+export const InfoPopover = ({children, maxWidth}: InfoPopoverProps) => {
     return (
         <Popover placement="right-end">
             <PopoverTrigger>
@@ -19,7 +20,7 @@ export const InfoPopover = ({children}: InfoPopoverProps) => {
                 </Button>
             </PopoverTrigger>
             <PopoverContent>
-                <div className={"p-1 flex flex-col gap-1 flex-wrap max-w-[200px] "}>
+                <div className={`p-1 py-2 flex flex-col gap-1 flex-wrap ${maxWidth ? "": "max-w-[200px]" }`}>
                     {children}
                 </div>
             </PopoverContent>
