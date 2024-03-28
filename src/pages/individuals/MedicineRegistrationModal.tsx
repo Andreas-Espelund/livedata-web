@@ -31,6 +31,7 @@ import {
 import useStatus from "@/hooks/useStatus";
 import {massMedicineSchema} from "@/validation/massMedicineValidation";
 import {yupResolver} from "@hookform/resolvers/yup";
+import {MedicineSelector} from "@/components/MedicineSelector";
 
 interface MedicineRegistrationModalProps {
     isOpen: boolean;
@@ -131,7 +132,7 @@ const MedicineRegistrationModal = ({isOpen, onClose, selectedKeys, individuals}:
                                 name="medicine"
                                 control={control}
                                 render={({field, fieldState}) =>
-                                    <Input label={"medisin"} {...field} errorMessage={fieldState.error?.message}/>}
+                                    <MedicineSelector field={field} errorMessage={fieldState.error?.message}/>}
                             />
 
                             <div className={"flex justify-between items-center gap-4 w-full"}>

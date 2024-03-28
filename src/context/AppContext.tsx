@@ -1,15 +1,17 @@
 import React, {createContext, ReactNode, useCallback, useContext, useEffect, useState} from 'react';
 import {onAuthStateChanged} from "firebase/auth";
-import {AppUser, Breeder, Individual} from "@/types/types";
+import {AppUser, Breeder, Individual, MedicineRegistry} from "@/types/types";
 import {auth} from "@/api/firebase";
 import {getBreedersListener} from "@/api/firestore/breeders";
 import {getUserDetails} from "@/api/firestore/users";
 import {individualListener} from "@/api/firestore/individuals";
+import {getMedicineRegistryListener} from "@/api/firestore/medicineRegistry";
 
 
 interface AppContextProps {
     individuals: Map<string, Individual>;
     breeders: Map<string, Breeder>;
+    medicines: Array<MedicineRegistry>;
     user: AppUser | undefined;
     getIndividual: (doc: string) => Individual | undefined;
     getIndividualFromID: (id: string) => Individual | undefined;
@@ -33,6 +35,7 @@ export const AppContext = createContext<AppContextProps>({
     loading: true,
     size: "md",
     user: undefined,
+    medicines: []
 });
 
 interface AppProviderProps {
@@ -41,7 +44,9 @@ interface AppProviderProps {
 
 export const AppProvider: React.FC<AppProviderProps> = ({children}) => {
     const [individuals, setIndividuals] = useState<Map<string, Individual>>(new Map());
-    const [breeders, setBreeders] = useState<Breeder[]>([]);
+    const [breeders, setBreeders] = useState<Map<string, Breeder>>(new Map());
+    const [medicines, setMedicines] = useState<MedicineRegistry[]>([]);
+
     const [user, setUser] = useState<AppUser | undefined>(undefined);
     const [size, setSize] = useState<"sm" | "md" | "lg">("md");
     const [loading, setLoading] = useState(true)
@@ -72,6 +77,13 @@ export const AppProvider: React.FC<AppProviderProps> = ({children}) => {
     useEffect(() => {
         if (user && user.authUser) {
             const unsubscribe = getBreedersListener(user.authUser.uid, setBreeders)
+            return unsubscribe
+        }
+    }, [user]);
+
+    useEffect(() => {
+        if (user && user.authUser) {
+            const unsubscribe = getMedicineRegistryListener(user.authUser.uid, setMedicines)
             return unsubscribe
         }
     }, [user]);
@@ -111,7 +123,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({children}) => {
     }, [breeders])
     return (
         <AppContext.Provider
-            value={{individuals, breeders, user, getIndividual, size, loading, getIndividualFromID, getBreederFromID}}>
+            value={{individuals, breeders, user, getIndividual, size, loading, getIndividualFromID, getBreederFromID, medicines}}>
             {children}
         </AppContext.Provider>
     );

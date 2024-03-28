@@ -1,4 +1,4 @@
-import { User } from "firebase/auth";
+import {User} from "firebase/auth";
 
 export type Individual = {
     id: string;
@@ -18,6 +18,10 @@ export type Breeder = {
     birth_date: string,
     status: string,
     doc: string
+}
+
+export type MedicineRegistry = {
+    name: string
 }
 
 export type BirthRecord = {

@@ -229,7 +229,7 @@ const BirthForm = () => {
                             )}
                         />
                         <div className="flex gap-4 justify-end w-full">
-                            <Button type="reset" variant={"flat"} color={"danger"} onPress={handleReset}>
+                            <Button type="reset" variant={"light"} color={"danger"} onPress={handleReset}>
                                 Nullstill
                             </Button>
                             <Button type="submit" color="primary" isLoading={loading}>

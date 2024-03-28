@@ -73,10 +73,6 @@ export const BreedersPage = () => {
 
     }
 
-    const onStatusChange = async () => {
-
-    }
-
     const TopContent = () => {
         return (
             <div className={"flex justify-between"}>
@@ -86,7 +82,8 @@ export const BreedersPage = () => {
                         Vis inaktive
                         <Checkbox isSelected={showInactive} onValueChange={(v) => setShowInactive(v)}/>
                     </label>
-                    <Button startContent={<PlusIcon/>} color={"primary"} onPress={onOpen}>Ny veir</Button>
+                    <Button startContent={<PlusIcon/>} color={"primary"} variant={"shadow"} onPress={onOpen}>Ny
+                        veir</Button>
                 </div>
             </div>
         )
@@ -202,8 +199,10 @@ export const BreedersPage = () => {
             </Modal>
 
             <NoticeWrapper>
-                {success && <NoticeBox title={"Suksess"} message={"Ny veir lagt til"} type={"success"}/>}
-                {error && <NoticeBox title={"Feil"} message={error} type={"danger"}/>}
+                <NoticeBox title={"Suksess"} message={"Ny veir lagt til"} type={"success"} visible={success}
+                           onClose={resetStatus}/>
+                <NoticeBox title={"Feil"} message={error || "Noko gjekk gale"} type={"danger"} visible={error !== null}
+                           onClose={resetStatus}/>
             </NoticeWrapper>
 
         </div>

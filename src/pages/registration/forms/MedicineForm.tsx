@@ -19,7 +19,7 @@ interface MedicineFormData {
 
 export const MedicineForm = () => {
     const {user} = useAppContext()
-    const {control, handleSubmit, formState} = useForm<MedicineFormData>({
+    const {control, handleSubmit} = useForm<MedicineFormData>({
         resolver: yupResolver(medicineSchema),
         defaultValues: {
             date: formatDate(new Date())
@@ -75,7 +75,7 @@ export const MedicineForm = () => {
                             }
                         />
                         <div className={"flex justify-end"}>
-                            <Button color={"primary"} isLoading={loading} isDisabled={!formState.isValid}
+                            <Button color={"primary"} isLoading={loading}
                                     type={"submit"}>Registrer</Button>
                         </div>
                     </form>

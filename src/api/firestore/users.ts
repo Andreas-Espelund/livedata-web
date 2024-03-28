@@ -22,7 +22,7 @@ export const getUserDetails = async (userId: string): Promise<UserDetail | undef
 
 export const changeUserDetails = async (userId: string, userDetails: UserDetail): Promise<void> => {
     try {
-        await setDoc(doc(db, "users", userId),userDetails);
+        await setDoc(doc(db, "users", userId), userDetails);
     } catch (error) {
         console.error(error)
     }
@@ -36,3 +36,4 @@ export const sendFeedback = async (feedbackData) => {
         console.error(error)
     }
 }
+
