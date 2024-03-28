@@ -1,4 +1,4 @@
-import { useEffect, useState} from "react";
+import {useEffect, useState} from "react";
 
 import {
     Button,
@@ -27,7 +27,7 @@ import {Controller, useForm} from "react-hook-form";
 
 import {PlusIcon, VerticalDotsIcon} from "@/images/icons";
 import {Breeder} from "@/types/types";
-import {addBreeder, updateBreederStatus} from "@/api/firestore";
+import {addBreeder, updateBreederStatus} from "@/api/firestore/breeders";
 import {NoticeBox, NoticeWrapper} from "@/components/";
 import {useAppContext} from "@/context/AppContext";
 import useStatus from "@/hooks/useStatus";
@@ -40,21 +40,21 @@ export const BreedersPage = () => {
 
 
     const {loading, error, success, startLoading, setSuccessState, setErrorState, resetStatus} = useStatus()
-    const [showInactive, setShowInactive ] = useState(false)
+    const [showInactive, setShowInactive] = useState(false)
 
     const [rows, setRows] = useState<Breeder[]>([])
-    const { breeders, user } = useAppContext()
+    const {breeders, user} = useAppContext()
 
     const breederList = Array.from(breeders.values())
 
     useEffect(() => {
         let filteredItems = breederList
         if (!showInactive) {
-             filteredItems = filteredItems.filter(item => item.status == "active")
+            filteredItems = filteredItems.filter(item => item.status == "active")
         }
 
         setRows(filteredItems)
-    },[showInactive, breeders])
+    }, [showInactive, breeders])
 
 
     const onSubmit = async (data) => {
@@ -99,7 +99,8 @@ export const BreedersPage = () => {
                 aria-label={"bucks"}
                 topContentPlacement={"outside"}
                 topContent={<TopContent/>}
-                bottomContent={<p className={"text-small text-default-400 p-2"}>{`Viser ${rows.length} av ${breederList.length} veirar`}</p>}
+                bottomContent={<p
+                    className={"text-small text-default-400 p-2"}>{`Viser ${rows.length} av ${breederList.length} veirar`}</p>}
                 bottomContentPlacement={"outside"}
             >
                 <TableHeader>
@@ -129,10 +130,12 @@ export const BreedersPage = () => {
                                     </DropdownTrigger>
                                     <DropdownMenu aria-label={"actions"}>
                                         {e.status === "active" ?
-                                            <DropdownItem onPress={() => updateBreederStatus(user?.authUser?.uid,e.doc, "inactive")}>
-                                            Fjern fra aktive veirar
+                                            <DropdownItem
+                                                onPress={() => updateBreederStatus(user?.authUser?.uid, e.doc, "inactive")}>
+                                                Fjern fra aktive veirar
                                             </DropdownItem> :
-                                            <DropdownItem onPress={() => updateBreederStatus(user?.authUser?.uid,e.doc, "active")}>
+                                            <DropdownItem
+                                                onPress={() => updateBreederStatus(user?.authUser?.uid, e.doc, "active")}>
                                                 Legg til aktive veirar
                                             </DropdownItem>
                                         }
@@ -150,48 +153,48 @@ export const BreedersPage = () => {
                         <>
                             <ModalHeader className="flex flex-col gap-1">Registrer ny veir</ModalHeader>
                             <ModalBody>
-                               <form onSubmit={handleSubmit(onSubmit)} className={"grid gap-6"}>
-                                   <Controller
-                                       control={control}
-                                       name={"id"}
-                                       defaultValue={""}
-                                       rules={{
-                                           required: "ID mangler",
-                                           pattern: {
-                                               value: /^\d{5}$/,
-                                               message: "ID må være 5-sifret tall"
-                                           }
-                                       }}
-                                       render={({field}) =>( <Input {...field} label={"ID (Øremerke)"}/>)}
-                                   />
+                                <form onSubmit={handleSubmit(onSubmit)} className={"grid gap-6"}>
+                                    <Controller
+                                        control={control}
+                                        name={"id"}
+                                        defaultValue={""}
+                                        rules={{
+                                            required: "ID mangler",
+                                            pattern: {
+                                                value: /^\d{5}$/,
+                                                message: "ID må være 5-sifret tall"
+                                            }
+                                        }}
+                                        render={({field}) => (<Input {...field} label={"ID (Øremerke)"}/>)}
+                                    />
 
-                                   <Controller
-                                       control={control}
-                                       name={"nickname"}
-                                       defaultValue={""}
-                                       rules={{required: "Skriv inn et kallenavn"}}
-                                       render={({field}) =>( <Input {...field} label={"Kallenavn"}/>)}
-                                   />
+                                    <Controller
+                                        control={control}
+                                        name={"nickname"}
+                                        defaultValue={""}
+                                        rules={{required: "Skriv inn et kallenavn"}}
+                                        render={({field}) => (<Input {...field} label={"Kallenavn"}/>)}
+                                    />
 
-                                   <Controller
-                                       control={control}
-                                       name={"birth_date"}
-                                       defaultValue={""}
-                                       rules={{required: "Skriv inn en dato"}}
-                                       render={({field}) =>( <Input placeholder=" " label="Fødselsdato" {...field} type={"date"} />)}
-                                   />
+                                    <Controller
+                                        control={control}
+                                        name={"birth_date"}
+                                        defaultValue={""}
+                                        rules={{required: "Skriv inn en dato"}}
+                                        render={({field}) => (
+                                            <Input placeholder=" " label="Fødselsdato" {...field} type={"date"}/>)}
+                                    />
 
 
-
-                                   <div className={"flex justify-end gap-4 pb-2"}>
-                                       <Button color="danger" variant="light" onPress={onClose}>
-                                           Lukk
-                                       </Button>
-                                       <Button color="primary" type="submit" isLoading={loading} isDisabled={!isValid}>
-                                           Registrer
-                                       </Button>
-                                   </div>
-                               </form>
+                                    <div className={"flex justify-end gap-4 pb-2"}>
+                                        <Button color="danger" variant="light" onPress={onClose}>
+                                            Lukk
+                                        </Button>
+                                        <Button color="primary" type="submit" isLoading={loading} isDisabled={!isValid}>
+                                            Registrer
+                                        </Button>
+                                    </div>
+                                </form>
                             </ModalBody>
                         </>
                     )}

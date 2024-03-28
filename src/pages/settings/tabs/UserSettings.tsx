@@ -3,7 +3,7 @@ import {Button, Card, Input, CardBody, CardHeader} from "@nextui-org/react";
 import {useAppContext} from "@/context/AppContext";
 import React, {useEffect} from "react";
 import {UserDetail} from "@/types/types";
-import {changeUserDetails} from "@/api/firestore";
+import {changeUserDetails} from "@/api/firestore/users";
 import useStatus from "@/hooks/useStatus";
 import {NoticeWrapper, NoticeBox, Heading2} from "@/components";
 
@@ -17,7 +17,7 @@ interface FormInput {
 }
 
 const UserSettings = () => {
-    const {user}  = useAppContext()
+    const {user} = useAppContext()
     const {loading, error, success, setErrorState, setSuccessState, startLoading, resetStatus} = useStatus()
 
     const defaultValues = {
@@ -28,7 +28,7 @@ const UserSettings = () => {
         prodno: user?.userDetail?.prodno
     }
 
-    const {handleSubmit, control, reset } = useForm<FormInput>({
+    const {handleSubmit, control, reset} = useForm<FormInput>({
         defaultValues: defaultValues
     })
 
@@ -39,7 +39,7 @@ const UserSettings = () => {
     }, [user, reset]);
 
     const onSubmit = (data: FormInput) => {
-        if (!user||!user.authUser) return;
+        if (!user || !user.authUser) return;
         startLoading()
         const userDetail: UserDetail = {...data, email: user.userDetail?.email || ""}
 
@@ -62,17 +62,17 @@ const UserSettings = () => {
                             <Controller
                                 name="firstname"
                                 control={control}
-                                rules={{ required: "Skriv ditt navn" }} // Add more validation as needed
-                                render={({ field, fieldState }) => (
+                                rules={{required: "Skriv ditt navn"}} // Add more validation as needed
+                                render={({field, fieldState}) => (
                                     <Input errorMessage={fieldState.error?.message} {...field} label="Fornavn"/>
                                 )}
                             />
                             <Controller
                                 name="lastname"
                                 control={control}
-                                rules={{ required: "Skriv ditt navn" }} // Add more validation as needed
-                                render={({ field, fieldState }) => (
-                                    <Input errorMessage={fieldState.error?.message} {...field} label="Etternavn" />
+                                rules={{required: "Skriv ditt navn"}} // Add more validation as needed
+                                render={({field, fieldState}) => (
+                                    <Input errorMessage={fieldState.error?.message} {...field} label="Etternavn"/>
                                 )}
                             />
                         </div>
@@ -80,18 +80,19 @@ const UserSettings = () => {
                         <Controller
                             name="birthdate"
                             control={control}
-                            rules={{ required: "Skriv din fødselsdato" }} // Add more validation as needed
-                            render={({ field, fieldState }) => (
-                                <Input errorMessage={fieldState.error?.message} type={"date"} {...field} label={"Fødselsdato"} placeholder=" " />
+                            rules={{required: "Skriv din fødselsdato"}} // Add more validation as needed
+                            render={({field, fieldState}) => (
+                                <Input errorMessage={fieldState.error?.message} type={"date"} {...field}
+                                       label={"Fødselsdato"} placeholder=" "/>
                             )}
                         />
 
                         <Controller
                             name="address"
                             control={control}
-                            rules={{ required: "Skriv din adresse" }} // Add more validation as needed
-                            render={({ field, fieldState }) => (
-                                <Input errorMessage={fieldState.error?.message} {...field} label={"Adresse"} />
+                            rules={{required: "Skriv din adresse"}} // Add more validation as needed
+                            render={({field, fieldState}) => (
+                                <Input errorMessage={fieldState.error?.message} {...field} label={"Adresse"}/>
                             )}
                         />
 
@@ -105,8 +106,8 @@ const UserSettings = () => {
                                     message: "Produsentnummeret må være et 10-sifret tall"
                                 }
                             }}
-                            render={({ field, fieldState }) => (
-                                <Input errorMessage={fieldState.error?.message}  {...field} label={"Produsentnummer"} />
+                            render={({field, fieldState}) => (
+                                <Input errorMessage={fieldState.error?.message}  {...field} label={"Produsentnummer"}/>
                             )}
                         />
 
@@ -118,7 +119,8 @@ const UserSettings = () => {
             </Card>
 
             <NoticeWrapper>
-                {success && <NoticeBox title={"Endringer lagret"} message={"Last siden på nytt for å se endringer"} type={"success"} noTimeout={false}/>}
+                {success && <NoticeBox title={"Endringer lagret"} message={"Last siden på nytt for å se endringer"}
+                                       type={"success"} noTimeout={false}/>}
                 {error && <NoticeBox title={"En feil oppstod"} message={error} type={"danger"} noTimeout={false}/>}
             </NoticeWrapper>
         </>

@@ -2,30 +2,34 @@ import {Button, Card} from "@nextui-org/react";
 import {useEffect, useState} from "react";
 import "./NoticeBox.css"
 
-export function NoticeBox({title, message, type, noTimeout = false}: {
+export function NoticeBox({title, message, type, visible, onClose, noTimeout = false}: {
     title: string,
     message: string,
     type: "warning" | "danger" | "info" | "success",
-    noTimeout: boolean | undefined
+    visible: boolean,
+    onClose: () => void,
+    noTimeout?: boolean
 }) {
 
-    const [isVisible, setIsVisible] = useState(true);
     const [animationClass, setAnimationClass] = useState("noticeBox-enter");
 
     useEffect(() => {
         if (!noTimeout) {
             const timer = setTimeout(() => {
                 setAnimationClass("noticeBox-exit");
-                setTimeout(() => setIsVisible(false), 500); // Corresponds to animation duration
-            }, 8000);
+                setTimeout(onClose, 500); // Corresponds to animation duration
+            }, 5000);
 
-            return () => clearTimeout(timer);
+            return () => {
+                clearTimeout(timer)
+                setAnimationClass("noticeBox-enter")
+            };
         }
-    }, [noTimeout]);
+    }, [visible]);
 
     const handleClose = () => {
         setAnimationClass("noticeBox-exit");
-        setTimeout(() => setIsVisible(false), 500); // Corresponds to animation duration
+        setTimeout(onClose, 500); // Corresponds to animation duration
     };
 
     const colorMap = {
@@ -62,7 +66,7 @@ export function NoticeBox({title, message, type, noTimeout = false}: {
     const icon = iconMap[type] // set the icon
 
 
-    if (!isVisible) {
+    if (!visible) {
         return null
     }
     return (

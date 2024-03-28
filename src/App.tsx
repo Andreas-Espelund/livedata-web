@@ -1,4 +1,3 @@
-import './App.css'
 import {createBrowserRouter, RouterProvider} from "react-router-dom";
 import {NextUIProvider, Spinner} from "@nextui-org/react";
 import {protectRoute} from "@/context/AuthenticatedRoute";

@@ -1,6 +1,6 @@
-import React, { useEffect} from "react";
+import React, {useEffect} from "react";
 import {
-    Button,
+    Button, ButtonGroup,
     Chip,
     Dropdown,
     DropdownItem,
@@ -19,10 +19,10 @@ import {
     TableRow, Tooltip, useDisclosure
 } from "@nextui-org/react";
 
-import { SearchIcon, VerticalDotsIcon} from "../../../public/icons";
+import {SearchIcon, VerticalDotsIcon} from "../../../public/icons";
 import {Individual} from "@/types/types";
 import {Heading1} from "@/components/Headings";
-import {PlusIcon, PrinterIcon} from "@/images/icons";
+import {BoltIcon, HeartIcon, PlusIcon, PrinterIcon} from "@/images/icons";
 import MedicineRegistrationModal from "@/pages/individuals/MedicineRegistrationModal";
 import {useAppContext} from "@/context/AppContext";
 import {NavLink} from "react-router-dom";
@@ -47,6 +47,7 @@ export const statusMap = {
     "lost_in": "Tapt innmark",
     "lost_out": "Tapt utmark",
     "slaught": "Slakt",
+    "slaught_home": "Slakt heime",
     "euthanized": "Avlivet",
     "inactive": "Inaktiv"
 }
@@ -56,12 +57,12 @@ const capitalize = (str: string) => {
     return str.toUpperCase()
 }
 
-const DEFAULTS :Record<string, any> = {
-    "columns" : ["id", "birth_date", "status", "father", "mother", "gender", "actions", "bottle"],
-    "status" : ["active"],
+const DEFAULTS: Record<string, any> = {
+    "columns": ["id", "birth_date", "status", "father", "mother", "gender", "actions", "bottle"],
+    "status": ["active"],
     "genders": ["male", "female"],
     "year": [2024 - 5, 2024],
-    "pages" : 10
+    "pages": 10
 }
 
 
@@ -74,8 +75,9 @@ const get_local_or_default_value = (key: string): any => {
 };
 
 
-export const  IndividualsPage = () => {
+export const IndividualsPage = () => {
     const {isOpen, onOpen, onOpenChange} = useDisclosure();
+    const {isOpen: isMedicineOpen, onOpen: onMedicineOpen, onOpenChange: onMedicineOpenChange} = useDisclosure();
     const {individuals, breeders} = useAppContext()
 
     const currentYear = new Date().getFullYear()
@@ -91,7 +93,6 @@ export const  IndividualsPage = () => {
         column: "tag",
         direction: "ascending",
     });
-
 
 
     // updating local browser storage
@@ -162,10 +163,10 @@ export const  IndividualsPage = () => {
         // apply status filter
         const statuses = Array.from(activeFilter)
         if (statuses.length == 1) {
-            if (statuses[0] == "active"){
-                filtered = filtered.filter(ind => statuses[0] ===  ind.status)
+            if (statuses[0] == "active") {
+                filtered = filtered.filter(ind => statuses[0] === ind.status)
             } else {
-                filtered = filtered.filter(ind => "active" !==  ind.status)
+                filtered = filtered.filter(ind => "active" !== ind.status)
             }
         }
 
@@ -212,7 +213,7 @@ export const  IndividualsPage = () => {
             case "id":
                 return (
                     <NavLink to={`/individuals/${cellValue}`}
-                          className={"hover:underline hover:font-semibold transition-all"}>{cellValue}</NavLink>
+                             className={"hover:underline hover:font-semibold transition-all"}>{cellValue}</NavLink>
                 );
             case "birth_date":
                 return (
@@ -222,7 +223,7 @@ export const  IndividualsPage = () => {
                 return (
                     <Chip className="capitalize" color={cellValue === "active" ? 'success' : 'danger'} size="sm"
                           variant="flat">
-                        {statusMap[cellValue]}
+                        {statusMap[cellValue] || cellValue}
                     </Chip>
                 );
             case "actions":
@@ -267,9 +268,9 @@ export const  IndividualsPage = () => {
                 );
             case "gender":
                 return (
-                    <Chip className="capitalize" color={cellValue == "male"? 'primary' : 'secondary'} size="sm"
+                    <Chip className="capitalize" color={cellValue == "male" ? 'primary' : 'secondary'} size="sm"
                           variant="flat">
-                        {cellValue === "male"? 'Veir' : 'Søye'}
+                        {cellValue === "male" ? 'Veir' : 'Søye'}
                     </Chip>
                 )
 
@@ -283,29 +284,11 @@ export const  IndividualsPage = () => {
     }, [individuals]);
 
 
-    // page handling
-    const onNextPage = React.useCallback(() => {
-        if (page < pages) {
-            setPage(page + 1);
-        }
-    }, [page, pages]);
-
-    const onPreviousPage = React.useCallback(() => {
-        if (page > 1) {
-            setPage(page - 1);
-        }
-    }, [page]);
-
     const onRowsPerPageChange = React.useCallback((selectedKeys: Selection) => {
         const selectedValue = Array.from(selectedKeys)[0];
         setRowsPerPage(Number(selectedValue));
         setPage(1);
     }, []);
-
-    const onGenderFilterChange = React.useCallback((selectedKeys: Selection) => {
-        const value = Array.from(selectedKeys)[0]
-        setGenderFilter(value.toString())
-    }, [])
 
 
     const onSearchChange = React.useCallback((value?: string) => {
@@ -326,77 +309,90 @@ export const  IndividualsPage = () => {
         return (
             <div className="flex flex-col gap-4">
                 <Heading1>Besetning</Heading1>
-                <div className="flex flex-col md:flex-row md:items-end justify-between gap-4" suppressHydrationWarning>
+                <div className="flex flex-col md:flex-row md:items-end justify-end gap-4"
+                     suppressHydrationWarning>
                     <Input
                         variant={"bordered"}
                         isClearable
-                        className="w-full sm:max-w-[30%]"
+                        className="w-full sm:max-w-[30%] mr-auto"
                         placeholder="Søk etter øremerke"
                         startContent={<SearchIcon/>}
                         value={filterValue}
                         onClear={() => onClear()}
                         onValueChange={onSearchChange}
                     />
-                    <div className={"flex flex-col md:flex-row gap-4 items-end"}>
-                        <Slider
-                            className={"md:max-w-[180px]"}
-                            label="Filtrer alder"
-                            step={1}
-                            minValue={currentYear - 10}
-                            maxValue={currentYear}
-                            defaultValue={ageFilter}
-                            formatOptions={{useGrouping: false}}
-                            onChange={(e) => { Array.isArray(e) ?setAgeFilter(e) : setAgeFilter(Array.from(e) )}}
-                        />
-                        <div className={"grid grid-cols-3 gap-2  flex-wrap"}>
-                            <Dropdown>
-                                <DropdownTrigger>
-                                    <Button variant={"flat"}>
-                                        Kjønn
-                                    </Button>
-                                </DropdownTrigger>
-                                <DropdownMenu aria-label={"gender selector"} disallowEmptySelection selectedKeys={genderFilter} selectionMode={"multiple"} onSelectionChange={(k) => setGenderFilter(k)}>
-                                    <DropdownItem key={"female"}>Søye</DropdownItem>
-                                    <DropdownItem key={"male"}>Veir</DropdownItem>
-                                </DropdownMenu>
-                            </Dropdown>
-                            <Dropdown>
-                                <DropdownTrigger>
-                                    <Button variant={"flat"}>
-                                        Status
-                                    </Button>
-                                </DropdownTrigger>
-                                <DropdownMenu aria-label={"status selector"} disallowEmptySelection selectedKeys={activeFilter} selectionMode={"multiple"} onSelectionChange={(k) => setActiveFilter(k) }>
-                                    <DropdownItem key={"active"}>Aktive</DropdownItem>
-                                    <DropdownItem key={"inactive"}>Inaktive</DropdownItem>
-                                </DropdownMenu>
-                            </Dropdown>
-                            <Dropdown>
-                                <DropdownTrigger>
-                                    <Button variant={"flat"}>
-                                        Kolonner
-                                    </Button>
-                                </DropdownTrigger>
-                                <DropdownMenu
-                                    disallowEmptySelection
-                                    aria-label="Table Columns"
-                                    closeOnSelect={false}
-                                    selectedKeys={visibleColumns}
-                                    selectionMode="multiple"
-                                    onSelectionChange={setVisibleColumns}
-                                >
-                                    {columns.map((column) => (
-                                        <DropdownItem key={column.uid} className="capitalize">
-                                            {capitalize(column.name)}
-                                        </DropdownItem>
-                                    ))}
-                                </DropdownMenu>
-                            </Dropdown>
-                        </div>
-                        <Button onPress={onOpen} variant={"shadow"} size={"lg"} color={"primary"} startContent={<PrinterIcon/>}>
-                            Skriv ut
-                        </Button>
-                    </div>
+
+                    <Slider
+                        className={"md:max-w-[180px]"}
+                        label="Filtrer alder"
+                        step={1}
+                        minValue={currentYear - 10}
+                        maxValue={currentYear}
+                        defaultValue={ageFilter}
+                        formatOptions={{useGrouping: false}}
+                        onChange={(e) => {
+                            Array.isArray(e) ? setAgeFilter(e) : setAgeFilter(Array.from(e))
+                        }}
+                    />
+                    <ButtonGroup>
+                        <Dropdown>
+                            <DropdownTrigger>
+                                <Button variant={"flat"}>
+                                    Kjønn
+                                </Button>
+                            </DropdownTrigger>
+                            <DropdownMenu aria-label={"gender selector"} disallowEmptySelection
+                                          selectedKeys={genderFilter} selectionMode={"multiple"}
+                                          onSelectionChange={(k) => setGenderFilter(k)}>
+                                <DropdownItem key={"female"}>Søye</DropdownItem>
+                                <DropdownItem key={"male"}>Veir</DropdownItem>
+                            </DropdownMenu>
+                        </Dropdown>
+                        <Dropdown>
+                            <DropdownTrigger>
+                                <Button variant={"flat"}>
+                                    Status
+                                </Button>
+                            </DropdownTrigger>
+                            <DropdownMenu aria-label={"status selector"} disallowEmptySelection
+                                          selectedKeys={activeFilter} selectionMode={"multiple"}
+                                          onSelectionChange={(k) => setActiveFilter(k)}>
+                                <DropdownItem key={"active"}>Aktive</DropdownItem>
+                                <DropdownItem key={"inactive"}>Inaktive</DropdownItem>
+                            </DropdownMenu>
+                        </Dropdown>
+                        <Dropdown>
+                            <DropdownTrigger>
+                                <Button variant={"flat"}>
+                                    Kolonner
+                                </Button>
+                            </DropdownTrigger>
+                            <DropdownMenu
+                                disallowEmptySelection
+                                aria-label="Table Columns"
+                                closeOnSelect={false}
+                                selectedKeys={visibleColumns}
+                                selectionMode="multiple"
+                                onSelectionChange={setVisibleColumns}
+                            >
+                                {columns.map((column) => (
+                                    <DropdownItem key={column.uid} className="capitalize">
+                                        {capitalize(column.name)}
+                                    </DropdownItem>
+                                ))}
+                            </DropdownMenu>
+                        </Dropdown>
+                    </ButtonGroup>
+                    <Button onPress={onOpen} variant={"shadow"} size={"lg"} color={"primary"}
+                            startContent={<PrinterIcon/>}>
+                        Skriv ut
+                    </Button>
+                    <Button onPress={onMedicineOpen} variant={"shadow"} size={"lg"} color={"secondary"}
+                            isDisabled={selectedKeys !== "all" && selectedKeys.size === 0}
+                            startContent={<HeartIcon/>}>
+                        Medisin
+                    </Button>
+
                 </div>
             </div>
         );
@@ -404,7 +400,7 @@ export const  IndividualsPage = () => {
         filterValue,
         visibleColumns,
         onSearchChange,
-        individuals.length,
+        individuals.size,
         hasSearchFilter,
         genderFilter,
         ageFilter,
@@ -417,9 +413,9 @@ export const  IndividualsPage = () => {
             <div className="py-2 px-2 flex justify-between items-center">
                 <div className={"flex flex-col gap-2"}>
                     <div className=" text-small text-default-400">
-                      {selectedKeys === "all"
-                          ? "Alle individer markert"
-                          : `${selectedKeys.size} av ${filteredItems.length} markert`}
+                        {selectedKeys === "all"
+                            ? "Alle individer markert"
+                            : `${selectedKeys.size} av ${filteredItems.length} markert`}
                     </div>
 
                     <Tooltip content={"Tilbakestill alle filtere"}>
@@ -464,9 +460,7 @@ export const  IndividualsPage = () => {
                 </div>
             </div>
         );
-    }, [selectedKeys, items.length, page, pages, hasSearchFilter,onRowsPerPageChange, rowsPerPage,]);
-
-
+    }, [selectedKeys, items.length, page, pages, hasSearchFilter, onRowsPerPageChange, rowsPerPage,]);
 
 
     return (
@@ -488,7 +482,7 @@ export const  IndividualsPage = () => {
                 onSortChange={setSortDescriptor}
 
             >
-                <TableHeader columns={headerColumns} >
+                <TableHeader columns={headerColumns}>
                     {(column) => (
                         <TableColumn
                             key={column.uid}
@@ -507,7 +501,10 @@ export const  IndividualsPage = () => {
                     )}
                 </TableBody>
             </Table>
-            <ExportModal isOpen={isOpen} onClose={onOpenChange} individuals={filteredItems} columns={visibleColumns}/>
+            <ExportModal isOpen={isOpen} onClose={onOpenChange} toPrint={filteredItems} columns={visibleColumns}/>
+            <MedicineRegistrationModal isOpen={isMedicineOpen} onClose={onMedicineOpenChange}
+                                       selectedKeys={selectedKeys} individuals={filteredItems}/>
+
         </div>
     );
 }

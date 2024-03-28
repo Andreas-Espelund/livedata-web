@@ -1,5 +1,5 @@
 // MedicineRegistrationModal.tsx
-import React, {useContext, useState} from 'react';
+import React, {useMemo, useState} from 'react';
 import {
     Button,
     Dropdown,
@@ -10,15 +10,15 @@ import {
     ModalBody,
     ModalContent,
     ModalHeader,
-    Progress
+    Progress, Selection
 } from '@nextui-org/react';
 import {Controller, useForm} from "react-hook-form";
 import {Input} from "@nextui-org/input";
 
 import {ChevronDownIcon} from "@/images/icons";
-import {formatDate} from "@/api/utils";
+import {formatDate} from "@/util/utils";
 import {Individual} from "@/types/types";
-import {addMedicineRecord} from "@/api/firestore";
+import {addMedicineRecord} from "@/api/firestore/registrations";
 
 import {useAppContext} from "@/context/AppContext";
 
@@ -28,58 +28,65 @@ import {
     NoticeWrapper,
     NoticeBox
 } from '@/components'
+import useStatus from "@/hooks/useStatus";
+import {massMedicineSchema} from "@/validation/massMedicineValidation";
+import {yupResolver} from "@hookform/resolvers/yup";
 
 interface MedicineRegistrationModalProps {
     isOpen: boolean;
     onClose: () => void;
-    selectedRows: Individual[];
+    selectedKeys: Selection;
+    individuals: Individual[];
 }
 
-function validateDate(date: string): string | undefined {
-    if (!date) {
-        return 'Date is required';
-    }
-
-    const parsedDate = new Date(date);
-    if (isNaN(parsedDate.getTime())) {
-        return 'Invalid date';
-    }
-
-    return undefined; // No errors if date is valid
+interface MedicineRegistrationFormData {
+    date: string;
+    medicine: string;
 }
 
 
-const MedicineRegistrationModal = ({isOpen, onClose, selectedRows}: MedicineRegistrationModalProps) => {
+const MedicineRegistrationModal = ({isOpen, onClose, selectedKeys, individuals}: MedicineRegistrationModalProps) => {
     const {user} = useAppContext()
-    const [isLoading, setLoading] = useState(false)
-    const [error, setError] = useState(false)
-    const [success, setSuccess] = useState(false)
+    const {loading, error, success, startLoading, setErrorState, setSuccessState, resetStatus} = useStatus()
+
     const [value, setValue] = useState(0)
 
-    const {register, handleSubmit, control, reset} = useForm({
+    const {handleSubmit, control, reset} = useForm<MedicineRegistrationFormData>({
+        resolver: yupResolver(massMedicineSchema),
         defaultValues: {
             date: formatDate(new Date()),
-            medicine: "",
         }
     });
 
+    // useMemo to only recompute when individuals or selectedKeys changes
+    const selectedIndividuals = useMemo(() => {
+        if (selectedKeys === "all") {
+            return individuals;
+        } else {
+            const keys = Array.from(selectedKeys); // Adjust based on how you can obtain the keys from selectedKeys
+            return individuals.filter((individual) => keys.includes(individual.id));
+        }
+    }, [individuals, selectedKeys]);
+
+
     const onSubmit = async (data) => {
         if (!user) return;
-        setLoading(true)
-        selectedRows.forEach(e => console.log(e.doc))
+        startLoading()
+        selectedIndividuals.forEach(e => console.log(e.doc))
 
         try {
-            const promises = selectedRows.map(e => addMedicineRecord(user.uid, {...data, individual: e.doc }))
-            promises.forEach(async e => {
+            const promises = selectedIndividuals.map(e => addMedicineRecord(user.authUser?.uid, {
+                ...data,
+                individual: e.doc
+            }))
+            for (const e of promises) {
                 await e
-                setValue(i => i+1)
-            })
-            setSuccess(true)
+                setValue(i => i + 1)
+            }
+            setSuccessState()
         } catch (error) {
             console.error(error)
-            setError(true)
-        } finally {
-            setLoading(false)
+            setErrorState(error)
         }
     }
 
@@ -87,9 +94,7 @@ const MedicineRegistrationModal = ({isOpen, onClose, selectedRows}: MedicineRegi
     const closeHandler = () => {
         setValue(0)
         reset()
-        setSuccess(false)
-        setLoading(false)
-        setError(false)
+        resetStatus()
         onClose()
     }
 
@@ -97,19 +102,17 @@ const MedicineRegistrationModal = ({isOpen, onClose, selectedRows}: MedicineRegi
 
         <Modal isOpen={isOpen} onClose={closeHandler} isDismissable={false}>
             <ModalContent>
-                <ModalHeader>
-                    Ny Medisinering
-                </ModalHeader>
+                <ModalHeader> Ny Medisinering </ModalHeader>
                 <ModalBody>
                     <Row>
                         <Dropdown>
                             <DropdownTrigger>
                                 <Button variant="bordered" endContent={<ChevronDownIcon/>}>
-                                    {`Påvirker ${selectedRows.length}  ${selectedRows.length == 1 ? 'individ' : 'individer'}`}
+                                    {`Påvirker ${selectedIndividuals.length}  ${selectedIndividuals.length == 1 ? 'individ' : 'individer'}`}
                                 </Button>
                             </DropdownTrigger>
                             <DropdownMenu aria-label="Static Actions">
-                                {selectedRows.map((item) =>
+                                {selectedIndividuals.map((item) =>
                                     <DropdownItem key={item.doc}> {item.id} </DropdownItem>
                                 )}
                             </DropdownMenu>
@@ -120,31 +123,31 @@ const MedicineRegistrationModal = ({isOpen, onClose, selectedRows}: MedicineRegi
                             <Controller
                                 name="date"
                                 control={control}
-                                rules={{required: "Velg dato"}}
                                 render={({field, fieldState}) =>
-                                    <Input label={"Dato"} type="date" {...field} errorMessage={fieldState.error?.message}/>}
+                                    <Input label={"Dato"} type="date" {...field}
+                                           errorMessage={fieldState.error?.message}/>}
                             />
                             <Controller
                                 name="medicine"
                                 control={control}
-                                rules={{required: "Skriv navn på medisin"}}
                                 render={({field, fieldState}) =>
                                     <Input label={"medisin"} {...field} errorMessage={fieldState.error?.message}/>}
                             />
 
                             <div className={"flex justify-between items-center gap-4 w-full"}>
-                                {isLoading || error || success &&
+                                {loading || error || success &&
                                     <Progress
                                         aria-label="Registering"
                                         size="md"
                                         value={value}
-                                        maxValue={selectedRows.length}
+                                        maxValue={selectedIndividuals.length}
                                         color={error ? "danger" : "success"}
                                         showValueLabel={true}
                                         className="max-w-md pb-2"
                                     />
                                 }
-                                <Button isLoading={isLoading} form="registrationForm" color={"primary"} type={"submit"} className={"ml-auto"}>
+                                <Button isLoading={loading} form="registrationForm" color={"primary"} type={"submit"}
+                                        className={"ml-auto"}>
                                     Registrer
                                 </Button>
                             </div>
@@ -154,14 +157,14 @@ const MedicineRegistrationModal = ({isOpen, onClose, selectedRows}: MedicineRegi
             </ModalContent>
 
             <NoticeWrapper>
-                {error && <NoticeBox title={"Noko gjekk gale"} message={"Kunne ikkje registrere medisinering"} type={"danger"} noTimeout={false}/>}
-                {success && <NoticeBox title={"Suksess"} message={"Medisinering registrert"} type={"success"} noTimeout={false}/>}
+                <NoticeBox title={"Noko gjekk gale"} message={"Kunne ikkje registrere medisinering"} type={"danger"}
+                           visible={error !== null} onClose={() => resetStatus()}/>
+                <NoticeBox title={"Suksess"} message={"Medisinering registrert"} type={"success"}
+                           visible={success} onClose={() => resetStatus()}/>
             </NoticeWrapper>
         </Modal>
     );
 };
-
-
 
 
 export default MedicineRegistrationModal;

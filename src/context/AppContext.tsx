@@ -2,8 +2,9 @@ import React, {createContext, ReactNode, useCallback, useContext, useEffect, use
 import {onAuthStateChanged} from "firebase/auth";
 import {AppUser, Breeder, Individual} from "@/types/types";
 import {auth} from "@/api/firebase";
-import { getBreedersListener, getUserDetails, individualListener} from "@/api/firestore";
-
+import {getBreedersListener} from "@/api/firestore/breeders";
+import {getUserDetails} from "@/api/firestore/users";
+import {individualListener} from "@/api/firestore/individuals";
 
 
 interface AppContextProps {
@@ -20,9 +21,15 @@ interface AppContextProps {
 export const AppContext = createContext<AppContextProps>({
     individuals: new Map<string, Individual>(),
     breeders: new Map<string, Breeder>,
-    getIndividual(): Individual | undefined {return undefined;},
-    getIndividualFromID(): Individual | undefined {return undefined},
-    getBreederFromID(): Breeder | undefined {return undefined},
+    getIndividual(): Individual | undefined {
+        return undefined;
+    },
+    getIndividualFromID(): Individual | undefined {
+        return undefined
+    },
+    getBreederFromID(): Breeder | undefined {
+        return undefined
+    },
     loading: true,
     size: "md",
     user: undefined,
@@ -31,7 +38,8 @@ export const AppContext = createContext<AppContextProps>({
 interface AppProviderProps {
     children: ReactNode;
 }
-export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
+
+export const AppProvider: React.FC<AppProviderProps> = ({children}) => {
     const [individuals, setIndividuals] = useState<Map<string, Individual>>(new Map());
     const [breeders, setBreeders] = useState<Breeder[]>([]);
     const [user, setUser] = useState<AppUser | undefined>(undefined);
@@ -56,7 +64,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     // Fetch data when user state changes
     useEffect(() => {
         if (user && user.authUser) {
-            const unsubscribe = individualListener(user.authUser.uid,setIndividuals)
+            const unsubscribe = individualListener(user.authUser.uid, setIndividuals)
             return unsubscribe;
         }
     }, [user]);
@@ -102,7 +110,8 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         return Array.from(breeders.values()).find(e => e.id === id)
     }, [breeders])
     return (
-        <AppContext.Provider value={{ individuals, breeders, user, getIndividual, size, loading, getIndividualFromID, getBreederFromID}}>
+        <AppContext.Provider
+            value={{individuals, breeders, user, getIndividual, size, loading, getIndividualFromID, getBreederFromID}}>
             {children}
         </AppContext.Provider>
     );

@@ -1,20 +1,19 @@
 import {Accordion, AccordionItem, Button, Card, Chip, Code, Input, Progress, Tooltip} from "@nextui-org/react";
 import {CardBody, CardHeader} from "@nextui-org/card";
-import {Heading2, Heading4, InfoPopover, NoticeBox, NoticeWrapper} from "@/components";
+import {Heading2, InfoPopover, NoticeBox, NoticeWrapper} from "@/components";
 import {Individual} from "@/types/types";
-import {useContext, useState} from "react";
+import {useState} from "react";
 import {useAppContext} from "@/context/AppContext";
-import {addIndividual} from "@/api/firestore";
-import {compressSpaces} from "../../../../dist/assets/index.es-GFBqNIdc";
+import {addIndividual} from "@/api/firestore/individuals";
 import useStatus from "@/hooks/useStatus";
 import {XIcon} from "@/images/icons";
 
 
 export const DataSettings = () => {
 
-    const { getIndividualFromID, getBreederFromID, user } = useAppContext()
+    const {getIndividualFromID, getBreederFromID, user} = useAppContext()
     const [individuals, setIndividual] = useState<Individual[]>([])
-    const [faulty, setFaulty] = useState<{ content:string, line:number }[]>([])
+    const [faulty, setFaulty] = useState<{ content: string, line: number }[]>([])
     const [registered, setRegistered] = useState(0)
     const [filename, setFilename] = useState("")
     const {loading, error, success, setErrorState, setSuccessState, startLoading, resetStatus} = useStatus()
@@ -59,14 +58,14 @@ export const DataSettings = () => {
 
             let curLine = 0
 
-            let items = text.split(/\r\n|\n/).map((str: string) : Individual | undefined =>  {
-                curLine ++;
+            let items = text.split(/\r\n|\n/).map((str: string): Individual | undefined => {
+                curLine++;
                 const bits = str.split(',')
 
 
                 if (!validData(bits)) {
                     console.log(bits)
-                    setFaulty(e => [...e, {content:str, line:curLine}])
+                    setFaulty(e => [...e, {content: str, line: curLine}])
                     return undefined
                 }
 
@@ -113,7 +112,7 @@ export const DataSettings = () => {
         try {
             promises.forEach(async promise => {
                 await promise
-                setRegistered(e => e+1)
+                setRegistered(e => e + 1)
             })
             setSuccessState()
         } catch (error: any) {
@@ -122,7 +121,7 @@ export const DataSettings = () => {
         }
     }
 
-    const resetPage = ( ) => {
+    const resetPage = () => {
         setIndividual([])
         setFaulty([])
         setRegistered(0)
@@ -142,109 +141,115 @@ export const DataSettings = () => {
 
     return (
         <>
-        <Card>
-            <CardHeader className={"flex justify-between"}>
-                <Heading2>Data</Heading2>
-                <InfoPopover maxWidth={true}>
-                    <div className={"grid gap-2"}>
-                        <p className={"text-lg font-semibold"}>Filformat</p>
-                        <p>Filen må lagres som en .csv fil med en linje per individ</p>
+            <Card>
+                <CardHeader className={"flex justify-between"}>
+                    <Heading2>Data</Heading2>
+                    <InfoPopover maxWidth={true}>
+                        <div className={"grid gap-2"}>
+                            <p className={"text-lg font-semibold"}>Filformat</p>
+                            <p>Filen må lagres som en .csv fil med en linje per individ</p>
 
-                        <p className={"font-semibold"}>Format per linje</p>
-                        <Code className={"w-fit"}>
-                            individ,kjønn,fødselsdato,mor,far,kopplam?
-                        </Code>
-                        <p className={"font-semibold"}>Eksempel</p>
-                        <Code className={"w-fit"}>
-                            90061,female,2020-05-23,10010,50040,true
-                        </Code>
+                            <p className={"font-semibold"}>Format per linje</p>
+                            <Code className={"w-fit"}>
+                                individ,kjønn,fødselsdato,mor,far,kopplam?
+                            </Code>
+                            <p className={"font-semibold"}>Eksempel</p>
+                            <Code className={"w-fit"}>
+                                90061,female,2020-05-23,10010,50040,true
+                            </Code>
+                        </div>
+                    </InfoPopover>
+                </CardHeader>
+                <CardBody className={"grid gap-4"}>
+
+                    <p>Masseregistrering av individer</p>
+                    <div className={"flex gap-4 items-center"}>
+                        <Button
+                            onPress={uploadHandler}
+                            variant={"bordered"}
+                        >
+                            Last opp fil
+                        </Button>
+                        <Code>{filename}</Code>
                     </div>
-                </InfoPopover>
-            </CardHeader>
-            <CardBody className={"grid gap-4"}>
-
-                <p>Masseregistrering av individer</p>
-                <div className={"flex gap-4 items-center"}>
-                    <Button
-                        onPress={uploadHandler}
-                        variant={"bordered"}
-                    >
-                        Last opp fil
-                    </Button>
-                    <Code>{filename}</Code>
-                </div>
-                <input
-                    aria-label={"file upload"}
-                    type="file"
-                    id={"fileupload"}
-                    className={"hidden"}
-                    accept={".csv"}
-                    onChange={handleFileChange}
-                />
-                {filename &&
-                <Accordion variant={"splitted"}>
-                    {individuals.length !== 0 &&
-                        <AccordionItem aria-label={"valid"} key={"1"} title={<p className={"text-success font-semibold"}>{`${individuals.length} ${individuals.length === 1 ? "gyldig individ" : "gyldige individer"}`}</p>}>
-                            <div className={"flex gap-2 p-2"}>
-                                {individuals.map((e, i) =>
-                                    <Chip
-                                        endContent={<XIcon/>}
-                                        variant={"flat"}
-                                        color={"success"}
-                                        className={"hover:bg-danger hover:text-white transition-all cursor-pointer"}
-                                        key={e.id}
-                                        onClick={() => removeIndividual(e.id)}
-                                    >
-                                        {e.id}
-                                    </Chip>
-                                )}
-                            </div>
-                        </AccordionItem>
-                    }
-                    {faulty.length !== 0 &&
-                        <AccordionItem aria-label={"invalid"} key={"2"} title={<p className={"text-danger font-semibold"}>{`${faulty.length} ${faulty.length === 1 ? "ugyldig individ" : "ugyldige individer"}`}</p>}>
-                            <div className={"grid gap-2"}>
-                                <ul className={"list-disc bg-warning-100 p-4 rounded-lg"}>
-                                    <p className={"text-lg font-semibold"}>Individ kan være ugyldige grunna: </p>
-                                    <li className={"ml-4"}>Linja i fila ikkje følg det forventa formatet</li>
-                                    <li className={"ml-4"}>Eit anna individ med samme ID nummer finnast allerede i besetninga</li>
-                                </ul>
-                                {faulty.map((e) =>
-                                    <div key={e.line} className={"flex gap-2"}>
-                                        <p className={"font-semibold"}>{`Linje ${e.line}:`}</p>
-                                        <p>{e.content}</p>
-                                    </div>
-                                )}
-                            </div>
-                        </AccordionItem>
-                    }
-                </Accordion>
-                }
-
-
-                <div className={"flex gap-4 justify-end items-center"}>
-                    <Progress
-                        aria-label={"progress"}
-                        className={loading || success || error ? "" : "hidden"}
-                        value={registered}
-                        maxValue={totalItems}
-                        color={"success"}
+                    <input
+                        aria-label={"file upload"}
+                        type="file"
+                        id={"fileupload"}
+                        className={"hidden"}
+                        accept={".csv"}
+                        onChange={handleFileChange}
                     />
+                    {filename &&
+                        <Accordion variant={"splitted"}>
+                            {individuals.length !== 0 &&
+                                <AccordionItem aria-label={"valid"} key={"1"} title={<p
+                                    className={"text-success font-semibold"}>{`${individuals.length} ${individuals.length === 1 ? "gyldig individ" : "gyldige individer"}`}</p>}>
+                                    <div className={"flex gap-2 p-2"}>
+                                        {individuals.map((e, i) =>
+                                            <Chip
+                                                endContent={<XIcon/>}
+                                                variant={"flat"}
+                                                color={"success"}
+                                                className={"hover:bg-danger hover:text-white transition-all cursor-pointer"}
+                                                key={e.id}
+                                                onClick={() => removeIndividual(e.id)}
+                                            >
+                                                {e.id}
+                                            </Chip>
+                                        )}
+                                    </div>
+                                </AccordionItem>
+                            }
+                            {faulty.length !== 0 &&
+                                <AccordionItem aria-label={"invalid"} key={"2"} title={<p
+                                    className={"text-danger font-semibold"}>{`${faulty.length} ${faulty.length === 1 ? "ugyldig individ" : "ugyldige individer"}`}</p>}>
+                                    <div className={"grid gap-2"}>
+                                        <ul className={"list-disc bg-warning-100 p-4 rounded-lg"}>
+                                            <p className={"text-lg font-semibold"}>Individ kan være ugyldige
+                                                grunna: </p>
+                                            <li className={"ml-4"}>Linja i fila ikkje følg det forventa formatet</li>
+                                            <li className={"ml-4"}>Eit anna individ med samme ID nummer finnast allerede
+                                                i besetninga
+                                            </li>
+                                        </ul>
+                                        {faulty.map((e) =>
+                                            <div key={e.line} className={"flex gap-2"}>
+                                                <p className={"font-semibold"}>{`Linje ${e.line}:`}</p>
+                                                <p>{e.content}</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </AccordionItem>
+                            }
+                        </Accordion>
+                    }
 
-                    <Button color={"primary"} variant={"bordered"} onPress={resetPage}>
-                        Nullstill
-                    </Button>
-                    <Button color={"primary"} isDisabled={individuals.length === 0} onPress={registerHandler}>
-                        Registrer individer
-                    </Button>
-                </div>
-            </CardBody>
-        </Card>
 
-        <NoticeWrapper>
-            {success && <NoticeBox title={"Suksess"} message={`${registered} individer registrert`} type={"success"} noTimeout={false}/>}
-            {error && <NoticeBox title={"Feil"} message={"Noko gjekk gale"} type={"danger"} noTimeout={false}/>}
-        </NoticeWrapper>
+                    <div className={"flex gap-4 justify-end items-center"}>
+                        <Progress
+                            aria-label={"progress"}
+                            className={loading || success || error ? "" : "hidden"}
+                            value={registered}
+                            maxValue={totalItems}
+                            color={"success"}
+                        />
+
+                        <Button color={"primary"} variant={"bordered"} onPress={resetPage}>
+                            Nullstill
+                        </Button>
+                        <Button color={"primary"} isDisabled={individuals.length === 0} onPress={registerHandler}>
+                            Registrer individer
+                        </Button>
+                    </div>
+                </CardBody>
+            </Card>
+
+            <NoticeWrapper>
+                {success && <NoticeBox title={"Suksess"} message={`${registered} individer registrert`} type={"success"}
+                                       noTimeout={false}/>}
+                {error && <NoticeBox title={"Feil"} message={"Noko gjekk gale"} type={"danger"} noTimeout={false}/>}
+            </NoticeWrapper>
         </>
     )
 }

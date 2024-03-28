@@ -1,56 +1,46 @@
-import {useState} from "react";
 import {Controller, useForm} from "react-hook-form";
-
 import {Input, Button, Textarea, Card, CardBody, CardHeader} from "@nextui-org/react";
 import {IndividualSelector, Stack, Heading2, NoticeBox, NoticeWrapper, InfoPopover} from "@/components";
 
-import {formatDate} from "@/api/utils";
-import {NoteRecord} from "@/types/types";
-import {addNoteRecord} from "@/api/firestore";
+import {formatDate} from "@/util/utils";
+import {addNoteRecord} from "@/api/firestore/registrations";
 import {useAppContext} from "@/context/AppContext";
+import useStatus from "@/hooks/useStatus";
+import {yupResolver} from "@hookform/resolvers/yup";
+import {noteSchema} from "@/validation/noteValidation";
 
+
+interface NoteFormData {
+    individual: string;
+    date: string;
+    note: string;
+}
 
 const NoteForm = () => {
 
     const {user} = useAppContext()
-    const [success, setSuccess]  = useState(false)
-    const [failure, setFailure]  = useState(false)
-    const [loading, setLoading] = useState(false)
+    const {error, success, loading, setErrorState, setSuccessState, startLoading, resetStatus} = useStatus()
 
-    const {handleSubmit, control, setValue, reset} = useForm({
-        mode: 'onChange',
+    const {handleSubmit, control} = useForm<NoteFormData>({
+        resolver: yupResolver(noteSchema),
         defaultValues: {
             date: formatDate(new Date()),
-            individual: "",
-            note: ""
         }
     });
 
-    const onSubmit = async (data) => {
-        setLoading(true)
-        try {
-            console.log(user?.uid, data)
-
-            const noteRecord : NoteRecord = {
-                date: data.date, individual: data.individual, note: data.note
-
-            }
-            await addNoteRecord(user.uid, noteRecord)
-
-
-            setSuccess(true)
-            reset()
-
-            setTimeout(() => {
-                setSuccess(false);
-                setFailure(false);
-            }, 8000); // This timeout should match the timeout in the NoticeBox component
-        } catch (error) {
-            console.error(error)
-            setFailure(true)
-        } finally {
-            setLoading(false)
-        }
+    const onSubmit = async (data: NoteFormData) => {
+        console.log(data)
+        startLoading()
+        addNoteRecord(user?.authUser?.uid, data)
+            .then(() => {
+                    setSuccessState()
+                    console.log("Note added")
+                }
+            )
+            .catch(err => {
+                console.error(err)
+                setErrorState(err)
+            })
     };
 
     return (
@@ -60,7 +50,7 @@ const NoteForm = () => {
                     <Heading2>Nytt notat</Heading2>
                     <InfoPopover>
                         <p className={"font-semibold"}>Tips</p>
-                        <p>Medisin bør registrerast som helsedata</p>
+                        <p>Notat om medisingering eller helse bør registrerast under Medisinering-menyen</p>
                     </InfoPopover>
                 </CardHeader>
                 <CardBody>
@@ -69,8 +59,6 @@ const NoteForm = () => {
                             <Controller
                                 name="individual"
                                 control={control}
-                                defaultValue={null}
-                                rules={{required: "Velg individ"}}
                                 render={({field, fieldState}) => (
                                     <IndividualSelector label={"Individ"} field={field} fieldState={fieldState}/>
                                 )}
@@ -79,11 +67,11 @@ const NoteForm = () => {
                             <Controller
                                 name="date"
                                 control={control}
-                                rules={{required: "Velg dato"}}
-                                render={({field}) => (
+                                render={({field, fieldState}) => (
                                     <Input
                                         type={"date"}
                                         label={"Dato"}
+                                        errorMessage={fieldState.error?.message}
                                         {...field}
                                         placeholder=" "
                                         required
@@ -94,19 +82,18 @@ const NoteForm = () => {
                             <Controller
                                 name="note"
                                 control={control}
-                                defaultValue=""
-                                rules={{required: "Skriv ett notat"}}
-                                render={({field}) => (
+                                render={({field, fieldState}) => (
                                     <Textarea
                                         label={"Notat"}
                                         {...field}
                                         placeholder="Skriv inn notat"
+                                        errorMessage={fieldState.error?.message}
                                         rows={4}
                                         required
                                     />
                                 )}
                             />
-                            <Button type="submit" color="primary" className={"ml-auto"}>
+                            <Button type="submit" color="primary" className={"ml-auto"} isLoading={loading}>
                                 Legg til notat
                             </Button>
                         </Stack>
@@ -114,8 +101,20 @@ const NoteForm = () => {
                 </CardBody>
             </Card>
             <NoticeWrapper>
-                {failure && <NoticeBox title={"Noke gjekk gale"} message={"Kunne ikkje lagre notat"} type={"danger"} />}
-                {success && <NoticeBox title={"Suksess"} message={"Ny notat registrert"} type={"success"} />}
+                <NoticeBox
+                    title={"Noke gjekk gale"}
+                    message={"Kunne ikkje lagre notat"}
+                    type={"danger"}
+                    visible={error != null} onClose={resetStatus}
+                />
+
+                <NoticeBox
+                    title={"Suksess"}
+                    message={"Ny notat registrert"}
+                    type={"success"}
+                    visible={success}
+                    onClose={() => resetStatus()}
+                />
             </NoticeWrapper>
         </>
     );

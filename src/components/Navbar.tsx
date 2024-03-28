@@ -1,12 +1,11 @@
-
-import React, {useContext} from 'react'
+import React from 'react'
 
 import {
     Avatar, Card, Divider,
     Dropdown,
     DropdownItem,
     DropdownMenu,
-    DropdownTrigger, Link,
+    DropdownTrigger,
     Navbar,
     NavbarBrand,
     NavbarContent,
@@ -14,12 +13,11 @@ import {
 } from "@nextui-org/react";
 
 
-import { signOut } from 'firebase/auth';
-import { auth } from "@/api/firebase";
-import {Context} from "@/App";
-import { useLocation, useNavigate, Link as NavLink } from 'react-router-dom';
+import {signOut} from 'firebase/auth';
+import {auth} from "@/api/firebase";
+
+import {useLocation, useNavigate, Link as NavLink} from 'react-router-dom';
 import {
-    BoltIcon,
     ClipBoardIcon,
     GearIcon,
     HomeIcon,
@@ -79,7 +77,7 @@ export default function TopNavBar() {
 
     const navigate = useNavigate()
 
-    const { user } = useAppContext()
+    const {user} = useAppContext()
     const [isMenuOpen, setIsMenuOpen] = React.useState(false);
     const location = useLocation();
 
@@ -102,9 +100,11 @@ export default function TopNavBar() {
         navigate(path);
     };
 
-    return (
-        <Navbar isBordered className={`bg-primary text-white`} aria-label={""} maxWidth={"full"} isMenuOpen={isMenuOpen} onMenuOpenChange={setIsMenuOpen}>
+    const currentPath = window?.location.pathname;
 
+    return (
+        <Navbar isBordered className={`bg-primary text-white`} aria-label={""} maxWidth={"full"} isMenuOpen={isMenuOpen}
+                onMenuOpenChange={setIsMenuOpen}>
             <NavbarMenuToggle
                 aria-label={isMenuOpen ? "Close menu" : "Open menu"}
                 className="sm:hidden"
@@ -123,7 +123,8 @@ export default function TopNavBar() {
 
             <NavbarContent justify={"end"} className={"hidden sm:flex"}>
                 {menuItems.functions.map((item, idx) => (
-                    <NavbarItem key={idx} >
+                    <NavbarItem key={idx}
+                                className={`border-b-1 border-transparent transition-all ${currentPath === item.path && "border-white"}`}>
                         <NavLink to={item.path}>
                             {item.label}
                         </NavLink>
@@ -131,19 +132,24 @@ export default function TopNavBar() {
                 ))}
                 <Dropdown>
                     <DropdownTrigger>
-                        <Avatar fallback={<PersonIcon/>} name={user?.userDetail?.firstname} color={"success"} className={"text-white"}/>
+                        <Avatar fallback={<PersonIcon/>} name={user?.userDetail?.firstname} color={"success"}
+                                className={"text-white"}/>
                     </DropdownTrigger>
                     <DropdownMenu aria-label={"user-menu"}>
-                        <DropdownItem isReadOnly key="profile" className="h-14 gap-2 cursor-default" textValue={"email"}>
+                        <DropdownItem isReadOnly key="profile" className="h-14 gap-2 cursor-default"
+                                      textValue={"email"}>
                             <User
                                 description={"Logget inn"}
                                 name={`${user?.userDetail?.firstname} ${user?.userDetail?.lastname}`}
-                                avatarProps={{fallback:<PersonIcon/>, color: "success", className: "text-white"}}
+                                avatarProps={{fallback: <PersonIcon/>, color: "success", className: "text-white"}}
                             />
                         </DropdownItem>
-                        <DropdownItem onPress={() => navigate("/settings")} startContent={<GearIcon/>}> Innstillinger</DropdownItem>
-                        <DropdownItem onPress={() => navigate("/info")} startContent={<InfoIcon/>}>  Hjelp og info </DropdownItem>
-                        <DropdownItem startContent={<LogoutIcon/>} onPress={logout} color={"danger"} className={"text-danger"}>
+                        <DropdownItem onPress={() => navigate("/settings")}
+                                      startContent={<GearIcon/>}> Innstillinger</DropdownItem>
+                        <DropdownItem onPress={() => navigate("/info")} startContent={<InfoIcon/>}> Hjelp og
+                            info </DropdownItem>
+                        <DropdownItem startContent={<LogoutIcon/>} onPress={logout} color={"danger"}
+                                      className={"text-danger"}>
                             Logg ut
                         </DropdownItem>
                     </DropdownMenu>
@@ -152,23 +158,25 @@ export default function TopNavBar() {
 
             <NavbarMenu aria-label={"navbar-menu"}>
                 {menuItems.functions.map((item, index) =>
-                <NavbarMenuItem onClick={() => handleMenuItemClick(item.path)} key={index} className={`w-full flex gap-2 items-center py-1 text-${item.color}`}>
-                    {item.icon}
-                    {item.label}
-                </NavbarMenuItem>)}
+                    <NavbarMenuItem onClick={() => handleMenuItemClick(item.path)} key={index}
+                                    className={`w-full flex gap-2 items-center py-1 text-${item.color}`}>
+                        {item.icon}
+                        {item.label}
+                    </NavbarMenuItem>)}
                 <Divider/>
 
                 <NavbarMenuItem className={""}>
                     <Card className={"flex p-4 w-fit bg-opacity-20"}>
                         <User
                             description={"Logget inn"}
-                            name={user?.userDetail?.firstname +" " + user?.userDetail?.lastname}
-                            avatarProps={{fallback:<PersonIcon/>, color: "primary"}}
+                            name={user?.userDetail?.firstname + " " + user?.userDetail?.lastname}
+                            avatarProps={{fallback: <PersonIcon/>, color: "primary"}}
                         />
                     </Card>
                 </NavbarMenuItem>
                 {menuItems.options.map((item, index) =>
-                    <NavbarMenuItem onClick={() => handleMenuItemClick(item.path)} key={index} className={`w-full flex gap-2 items-center py-1 text-${item.color}`}>
+                    <NavbarMenuItem onClick={() => handleMenuItemClick(item.path)} key={index}
+                                    className={`w-full flex gap-2 items-center py-1 text-${item.color}`}>
                         {item.icon}
                         {item.label}
                     </NavbarMenuItem>)}

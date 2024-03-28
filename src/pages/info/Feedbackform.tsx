@@ -3,8 +3,8 @@ import useStatus from "@/hooks/useStatus";
 import {Controller, useForm} from "react-hook-form";
 import {NoticeWrapper} from "@/components";
 import {NoticeBox} from "@/components/NoticeBox";
-import {sendFeedback} from "@/api/firestore";
-import {formatDate} from "@/api/utils";
+import {sendFeedback} from "@/api/firestore/users";
+import {formatDate} from "@/util/utils";
 
 
 interface FormData {

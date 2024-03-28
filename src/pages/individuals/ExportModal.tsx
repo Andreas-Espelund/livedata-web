@@ -16,7 +16,7 @@ import {Controller, useForm} from "react-hook-form";
 import {Input} from "@nextui-org/input";
 
 import {ChevronDownIcon} from "@/images/icons";
-import {formatDate} from "@/api/utils";
+import {formatDate} from "@/util/utils";
 import {Individual} from "@/types/types";
 import {addMedicineRecord} from "@/api/firestore";
 
@@ -33,21 +33,32 @@ import {generatePdf} from "@/util/GeneratePDF";
 interface ExportModalProps {
     isOpen: boolean;
     onClose: () => void;
-    individuals: Individual[];
+    toPrint: Individual[];
     columns: Selection;
 }
 
 interface FormData {
-    title : string;
+    title: string;
 }
 
 
-const ExportModal = ({isOpen, onClose, individuals, columns}: ExportModalProps) => {
+const ExportModal = ({isOpen, onClose, toPrint, columns}: ExportModalProps) => {
 
+    const {individuals, breeders} = useAppContext()
     const {handleSubmit, control, reset} = useForm<FormData>();
 
     const onSubmit = async (data: FormData) => {
-        generatePdf(individuals, columns, data.title)
+        console.log(individuals)
+        const printable = toPrint.map((ind) => {
+            return {
+                ...ind,
+                mother: individuals.get(ind.mother as string)?.id,
+                father: breeders.get(ind.father as string)?.id
+            }
+        })
+
+        console.log(printable)
+        generatePdf(printable, columns, data.title)
     }
 
 
@@ -71,7 +82,8 @@ const ExportModal = ({isOpen, onClose, individuals, columns}: ExportModalProps) 
                             control={control}
                             rules={{required: "Skriv tittel"}}
                             render={({field, fieldState}) =>
-                                <Input label={"Tittel"} {...field} errorMessage={fieldState.error?.message} isRequired/>}
+                                <Input label={"Tittel"} {...field} errorMessage={fieldState.error?.message}
+                                       isRequired/>}
                         />
 
                         <Button color={"primary"} type={"submit"} className={"ml-auto"}>
@@ -84,8 +96,6 @@ const ExportModal = ({isOpen, onClose, individuals, columns}: ExportModalProps) 
         </Modal>
     );
 };
-
-
 
 
 export default ExportModal;

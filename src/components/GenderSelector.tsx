@@ -8,6 +8,7 @@ interface GenderSelectorProps {
     field: any,
     fieldState: any,
 }
+
 export const GenderSelector = ({field, fieldState}: GenderSelectorProps) => {
 
     const genders = [
@@ -21,13 +22,16 @@ export const GenderSelector = ({field, fieldState}: GenderSelectorProps) => {
         },
     ]
 
+
     const changeHandler = (selection: Selection) => {
         field.onChange(Array.from(selection)[0])
+
     }
     return (
         <Select
             label={"Kjønn"}
             className={"min-w-[100px]"}
+            value={field.value}
             errorMessage={fieldState.error?.message}
             onSelectionChange={changeHandler}
             selectionMode={"single"}

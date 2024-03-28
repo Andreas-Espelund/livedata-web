@@ -5,7 +5,7 @@ import {ReactNode} from "react";
 
 interface InfoPopoverProps {
     children: ReactNode,
-    maxWidth: boolean
+    maxWidth?: boolean
 }
 export const InfoPopover = ({children, maxWidth}: InfoPopoverProps) => {
     return (

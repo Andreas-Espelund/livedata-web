@@ -1,4 +1,4 @@
-import {useState} from "react";
+import {yupResolver} from "@hookform/resolvers/yup";
 
 import {Controller, useFieldArray, useForm} from "react-hook-form";
 
@@ -8,12 +8,8 @@ import {
     CardBody,
     CardHeader,
     Input,
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
     Textarea,
     Tooltip,
-    Image,
     Divider
 } from "@nextui-org/react";
 
@@ -26,33 +22,48 @@ import {
     BreederSelector,
     NoticeBox,
     NoticeWrapper,
-    BottleSelector, InfoPopover
+    BottleSelector
 } from "@/components/";
 
 
 import {BirthRecord, Individual} from "@/types/types";
-import {addBirthRecord, addIndividual} from "@/api/firestore";
-import {formatDate} from "@/api/utils";
+import {addIndividual} from "@/api/firestore/individuals";
+import {addBirthRecord} from "@/api/firestore/registrations";
+import {formatDate} from "@/util/utils";
 import {useAppContext} from "@/context/AppContext";
+import {birthSchema} from "@/validation/birthValidation";
+import useStatus from "@/hooks/useStatus";
+
+interface BirthFormData {
+    lambs: [
+        {
+            id?: string;
+            gender: string;
+            bottle: string;
+            tag: string;
+        }
+    ],
+    mother: string;
+    father: string;
+    date: string;
+    note?: string;
+}
 
 const BirthForm = () => {
 
     // validation state
     const {user} = useAppContext();
-    const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState(false);
-    const [isSuccess, setIsSuccess] = useState(false);
+
+    const {loading, startLoading, error, success, setSuccessState, setErrorState, resetStatus} = useStatus()
 
     // form state
-    const {handleSubmit, control, formState: {isValid}, reset} = useForm({
-        mode: 'onChange', // Validate the form on each change
+    const {handleSubmit, getValues, control, reset} = useForm<BirthFormData>({
+        resolver: yupResolver(birthSchema),
         defaultValues: {
-            lambs: [{id: '', gender: '', bottle: "0",}],
-            mother: '',
-            father: '',
+            lambs: [{gender: "", bottle: "0", tag: ""}],
             date: formatDate(new Date()),
-            note: ''
-        }
+        },
+        mode: 'onSubmit'
     });
 
     // lambs state
@@ -61,56 +72,66 @@ const BirthForm = () => {
         name: "lambs"
     });
 
-    const onSubmit = async (data: any) => {
-        if (!user || !user.authUser) return;
-        setIsLoading(true)
+    const onSubmit = async (data: BirthFormData) => {
+        console.log(data)
+        if (!user || !user.authUser) {
+            console.error("User not found")
+            return;
+        }
+        startLoading()
         const record: BirthRecord = {
-            date: data.date, father: data.father, lambs: data.lambs.map(e => e.id), mother: data.mother, note: data.note
+            date: formatDate(data.date),
+            father: data.father,
+            lambs: data.lambs.map(e => e.tag),
+            mother: data.mother,
+            note: data.note?.trim() || ""
         }
 
         const lambs: Individual[] = data.lambs.map(e => {
             const ind: Individual = {
-                birth_date: data.date,
+                birth_date: formatDate(data.date),
                 bottle: Boolean(e.bottle),
                 doc: "",
                 father: data.father,
                 gender: e.gender,
-                id: e.id,
+                id: e.tag,
                 mother: data.mother,
                 status: "active"
             }
             return ind
         })
 
-        var promises = lambs.map(e => addIndividual(user?.authUser?.uid, e))
+        const promises = lambs.map(e => addIndividual(user?.authUser?.uid, e))
         promises.push(addBirthRecord(user?.authUser.uid, data.mother, record))
 
-        try {
-            await Promise.all(promises)
-            setIsSuccess(true)
-            reset()
-        } catch (error) {
-            console.error(error)
-            setError(true)
-        } finally {
-            setIsLoading(false)
-        }
+        await Promise.all(promises)
+            .then(() => {
+                console.log("success")
+                setSuccessState()
+                reset()
+            })
+            .catch(error => {
+                console.error(error)
+                setErrorState(error)
+            })
     }
 
-    const addLamb = () => append({id: '', gender: '', bottle: ''})
+    const addLamb = () => {
+        let prevTag = getValues(`lambs.${fields.length - 1}.tag`)
+        const numeric = parseInt(prevTag)
+        prevTag = isNaN(numeric) ? "" : (numeric + 1).toString()
+        append({tag: prevTag, id: "", gender: "", bottle: "0"})
+    }
 
-    const handleReset = (e: any) => {
+    const handleReset = () => {
         fields.map((e, i) => remove(i))
-        fields[0] = {id: '', gender: '', bottle: ''}
+        fields[0] = {id: '', gender: '', bottle: '', tag: ''}
     }
 
     return (
         <Card>
             <CardHeader className={"flex justify-between"}>
                 <Heading2>Ny Lamming</Heading2>
-                <InfoPopover>
-                    <p>test</p>
-                </InfoPopover>
             </CardHeader>
             <CardBody className={""}>
                 <form onSubmit={handleSubmit(onSubmit)}>
@@ -119,18 +140,15 @@ const BirthForm = () => {
                         <Controller
                             name="mother"
                             control={control}
-                            defaultValue=""
-                            rules={{required: "Velg mor"}}
                             render={({field, fieldState}) => (
-                                <IndividualSelector label="Mor sin ID" field={field} fieldState={fieldState} gender={"female"}/>
+                                <IndividualSelector label="Mor sin ID" field={field} fieldState={fieldState}
+                                                    gender={"female"}/>
                             )}
                         />
 
                         <Controller
                             name="father"
                             control={control}
-                            defaultValue=""
-                            rules={{required: "Velg far"}}
                             render={({field, fieldState}) => (
                                 <BreederSelector label="Far sin ID" field={field} fieldState={fieldState}/>
                             )}
@@ -139,40 +157,29 @@ const BirthForm = () => {
                         <Controller
                             name="date"
                             control={control}
-                            defaultValue=""
-                            rules={{ required: 'Skriv inn dato' }}
                             render={({field, fieldState}) => (
-                                <Input {...field} type="date" placeholder=" " label="Fødtselsdato" errorMessage={fieldState.error?.message}/>
+                                <Input {...field} type="date" placeholder=" " label="Fødtselsdato"
+                                       errorMessage={fieldState.error?.message}/>
                             )}
                         />
                         <Heading4> Lam </Heading4>
                         {fields.map((field, index) => (
-                            <div key={field.id} className={"w-full"}>
+                            <div key={index} className={"w-full"}>
                                 <div className="grid md:grid-cols-2 w-full items-center gap-4">
                                     <Controller
-                                        name={`lambs.${index}.id`}
+                                        name={`lambs.${index}.tag`}
                                         control={control}
-                                        defaultValue={""}
-                                        rules={{
-                                            required: "ID is required",
-                                            pattern: {
-                                                value: /^\d{5}$/,
-                                                message: "ID må være 5-sifret tall"
-                                            }
-                                        }}
                                         render={({field, fieldState}) => (
-                                            <Input {...field} placeholder="ID (Øremerkenummer)" label={`Lam ${index + 1}`}
+                                            <Input {...field} placeholder="ID (Øremerkenummer)"
+                                                   onChange={field.onChange}
+                                                   label={`Lam ${index + 1}`}
                                                    className={"col-span-1"} errorMessage={fieldState.error?.message}/>
                                         )}
                                     />
-
-
                                     <div className={"flex gap-4 items-center col-span-1"}>
                                         <Controller
                                             name={`lambs.${index}.gender`}
                                             control={control}
-                                            defaultValue={field.gender}
-                                            rules={{ required: 'Velg kjønnn' }}
                                             render={({field, fieldState}) => (
                                                 <GenderSelector field={field} fieldState={fieldState}/>
                                             )}
@@ -181,8 +188,6 @@ const BirthForm = () => {
                                         <Controller
                                             name={`lambs.${index}.bottle`}
                                             control={control}
-                                            defaultValue={field.bottle}
-                                            rules={{ required: 'Velg kopp' }}
                                             render={({field, fieldState}) => (
                                                 <BottleSelector field={field} fieldState={fieldState}/>
                                             )}
@@ -190,8 +195,8 @@ const BirthForm = () => {
 
                                         <Tooltip content={"Fjern lam fra listen"}>
                                             <Button onPress={() => remove(index)}
-                                                color="danger"
-                                                variant="flat" isIconOnly>
+                                                    color="danger"
+                                                    variant="flat" isIconOnly>
                                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                                      strokeWidth={1.5} stroke="currentColor"
                                                      className="w-6 h-6">
@@ -206,7 +211,7 @@ const BirthForm = () => {
                             </div>
                         ))}
 
-                        <Button className={"ml-auto"} variant="faded" color="primary" onPress={(e) => addLamb()}>
+                        <Button className={"ml-auto"} variant="light" color="primary" onPress={(e) => addLamb()}>
                             Legg til lam
                         </Button>
                         <Heading4> Notat </Heading4>
@@ -214,7 +219,6 @@ const BirthForm = () => {
                         <Controller
                             name="note"
                             control={control}
-                            defaultValue=""
                             render={({field}) => (
                                 <Textarea
                                     {...field}
@@ -228,7 +232,7 @@ const BirthForm = () => {
                             <Button type="reset" variant={"flat"} color={"danger"} onPress={handleReset}>
                                 Nullstill
                             </Button>
-                            <Button  type="submit" color="primary" isLoading={isLoading}>
+                            <Button type="submit" color="primary" isLoading={loading}>
                                 Registrer lamming
                             </Button>
                         </div>
@@ -236,8 +240,10 @@ const BirthForm = () => {
                 </form>
             </CardBody>
             <NoticeWrapper>
-                {isSuccess && <NoticeBox title={"Lamming lagret"} message={"Du kan lukke denne siden"} type={"success"}/>}
-                {error && <NoticeBox title={"Kunne ikkje lagre"} message={"Noko gjekk gale"} type={"danger"}/>}
+                <NoticeBox title={"Lamming lagret"} message={"Du kan lukke denne siden"} type={"success"}
+                           visible={success} onClose={() => resetStatus()}/>
+                <NoticeBox title={"Kunne ikkje lagre"} message={"Noko gjekk gale"} type={"danger"}
+                           visible={error !== null} onClose={() => resetStatus()}/>
             </NoticeWrapper>
         </Card>
     )

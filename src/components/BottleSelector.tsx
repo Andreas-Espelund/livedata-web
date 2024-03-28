@@ -8,6 +8,7 @@ interface BottleSelectorProps {
     field: any,
     fieldState: any,
 }
+
 export const BottleSelector = ({field, fieldState}: BottleSelectorProps) => {
 
     const values = [
@@ -26,6 +27,7 @@ export const BottleSelector = ({field, fieldState}: BottleSelectorProps) => {
     }
     return (
         <Select
+            label={"Flaskelamb?"}
             className={"min-w-[100px]"}
             errorMessage={fieldState.error?.message}
             onSelectionChange={changeHandler}

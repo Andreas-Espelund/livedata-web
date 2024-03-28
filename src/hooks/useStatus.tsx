@@ -13,7 +13,7 @@ const useStatus = () => {
     };
 
     // Function to set an error
-    const setErrorState = (error: string):void => {
+    const setErrorState = (error: unknown):void => {
         setLoading(false);
         setError(error);
         setSuccess(false);
