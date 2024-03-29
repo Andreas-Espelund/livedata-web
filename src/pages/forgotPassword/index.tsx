@@ -1,30 +1,27 @@
-import {useState} from "react";
-
 import {Button, Card, CardBody, Input} from "@nextui-org/react";
 import {NoticeWrapper, NoticeBox} from "@/components";
 
 import {Controller, useForm} from "react-hook-form";
 
 import {auth} from "@/api/firebase";
-import { sendPasswordResetEmail } from "firebase/auth";
+import {sendPasswordResetEmail} from "firebase/auth";
 import {NavLink} from "react-router-dom";
+import useStatus from "@/hooks/useStatus";
 
+
+interface ForgotFormData {
+    email: string;
+}
 
 export const ForgotPage = () => {
-    const { reset, control, handleSubmit, formState: { errors } } = useForm();
+    const {control, handleSubmit} = useForm<ForgotFormData>();
+    const {success, error, loading, setSuccessState, startLoading, setErrorState, resetStatus} = useStatus()
 
-    const [resetSent, setResetSent] = useState(false);
-    const [isLoading, setIsLoading] = useState(false)
-    const handleResetPassword = async (data) => {
-        setIsLoading(true)
-        try {
-            await sendPasswordResetEmail(auth, data.email);
-        } catch (error) {
-            console.error('Error sending password reset email:', error.message);
-        } finally {
-            setResetSent(true);
-            setIsLoading(false)
-        }
+    const handleResetPassword = (data: ForgotFormData) => {
+        startLoading()
+        sendPasswordResetEmail(auth, data.email)
+            .then(setSuccessState)
+            .catch(setErrorState)
     };
 
 
@@ -38,13 +35,14 @@ export const ForgotPage = () => {
                             name="email"
                             defaultValue={""}
                             control={control}
-                            rules={{ required: "Skriv inn epost" }} // Add more validation as needed
-                            render={({ field, fieldState }) => (
-                                <Input errorMessage={fieldState.error?.message} type="email" {...field} label="Epost" isRequired/>
+                            rules={{required: "Skriv inn epost"}} // Add more validation as needed
+                            render={({field, fieldState}) => (
+                                <Input errorMessage={fieldState.error?.message} type="email" {...field} label="Epost"
+                                       isRequired/>
                             )}
                         />
 
-                        <Button isLoading={isLoading} type="submit" color={"primary"}>Send</Button>
+                        <Button isLoading={loading} type="submit" color={"primary"}>Send</Button>
                     </form>
                 </CardBody>
             </Card>
@@ -54,7 +52,10 @@ export const ForgotPage = () => {
             </div>
 
             <NoticeWrapper>
-                {resetSent && <NoticeBox title={"Sendt"} message={"Sjekk innboks eller spam"} type={"success"} noTimeout={true}/>}
+                <NoticeBox title={"Sendt"} message={"Sjekk innboks eller spam"} type={"success"} visible={success}
+                           onClose={resetStatus}/>
+                <NoticeBox title={"Feil"} message={error?.toString() || "Noko gjekk gale"} type={"danger"}
+                           visible={error !== null} onClose={resetStatus}/>
             </NoticeWrapper>
 
         </div>

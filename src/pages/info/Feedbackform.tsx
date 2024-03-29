@@ -15,67 +15,63 @@ interface FormData {
 }
 
 
-const defaultValues = {
-    name: "",
-    subject: "",
-    message: "",
-    date: formatDate(new Date())
-}
 export const Feedbackform = () => {
 
-    const {loading, error, success, setSuccessState, setErrorState, startLoading} = useStatus()
-    const {control, handleSubmit, reset, formState} = useForm<FormData>({
-        defaultValues: defaultValues,
+    const {loading, error, success, setSuccessState, setErrorState, startLoading, resetStatus} = useStatus()
+    const {control, handleSubmit, formState} = useForm<FormData>({
         mode: "onChange"
     })
 
     const onSubmit = async (data: FormData) => {
         data.date = formatDate(new Date())
         startLoading()
-        console.log("submitting", data);
         sendFeedback(data)
             .then(() => setSuccessState())
             .catch((error) => setErrorState(error))
-            .finally(() => reset(defaultValues))
     };
     return (
         <>
-        <Card>
-            <CardBody>
-                <form className={"flex flex-col gap-4"} onSubmit={handleSubmit(onSubmit)}>
-                    <Controller
-                        name={"name"}
-                        control={control}
-                        rules={{required: "Skriv ditt navn"}}
-                        render={({ field, fieldState}) =>
-                            <Input {...field} errorMessage={fieldState.error?.message} label={"Navn"} isRequired/>
-                        }
-                    />
-                    <Controller
-                        name={"subject"}
-                        control={control}
-                        rules={{required: "Hva gjelder tilbakemeldingen (kort)"}}
-                        render={({ field, fieldState}) =>
-                            <Input {...field} errorMessage={fieldState.error?.message} label={"Emne"} isRequired/>
-                        }
-                    />
-                    <Controller
-                        name={"message"}
-                        control={control}
-                        rules={{required: "Skriv din tilbakemelding"}}
-                        render={({ field, fieldState}) =>
-                            <Textarea minRows={6} {...field} errorMessage={fieldState.error?.message} label={"Melding"} isRequired/>
-                        }
-                    />
-                    <div className={"flex justify-end items-center gap-4"}>
-                        <Button isLoading={loading} isDisabled={!formState.isValid} type={"submit"} color={"primary"}>Send inn</Button>
-                    </div>
-                </form>
-            </CardBody>
-        </Card>
+            <Card>
+                <CardBody>
+                    <form className={"flex flex-col gap-4"} onSubmit={handleSubmit(onSubmit)}>
+                        <Controller
+                            name={"name"}
+                            control={control}
+                            rules={{required: "Skriv ditt navn"}}
+                            render={({field, fieldState}) =>
+                                <Input {...field} errorMessage={fieldState.error?.message} label={"Navn"} isRequired/>
+                            }
+                        />
+                        <Controller
+                            name={"subject"}
+                            control={control}
+                            rules={{required: "Hva gjelder tilbakemeldingen (kort)"}}
+                            render={({field, fieldState}) =>
+                                <Input {...field} errorMessage={fieldState.error?.message} label={"Emne"} isRequired/>
+                            }
+                        />
+                        <Controller
+                            name={"message"}
+                            control={control}
+                            rules={{required: "Skriv din tilbakemelding"}}
+                            render={({field, fieldState}) =>
+                                <Textarea minRows={6} {...field} errorMessage={fieldState.error?.message}
+                                          label={"Melding"} isRequired/>
+                            }
+                        />
+                        <div className={"flex justify-end items-center gap-4"}>
+                            <Button isLoading={loading} isDisabled={!formState.isValid} type={"submit"}
+                                    color={"primary"}>Send inn</Button>
+                        </div>
+                    </form>
+                </CardBody>
+            </Card>
             <NoticeWrapper>
-                {success && <NoticeBox title={"Suksess"} message={"Tilbakemelding sendt"} type={"success"} noTimeout={false}/>}
-                {error && <NoticeBox title={"Feil"} message={error} type={"danger"} noTimeout={false}/>}
+
+                <NoticeBox title={"Suksess"} message={"Tilbakemelding sendt"} type={"success"} visible={success}
+                           onClose={resetStatus}/>
+                <NoticeBox title={"Feil"} message={error?.message || "Noko gjekk gale"} type={"danger"}
+                           noTimeout={false} visible={error !== null} onClose={resetStatus}/>
             </NoticeWrapper>
         </>
     )

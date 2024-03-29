@@ -1,8 +1,5 @@
-import React, {useContext} from "react";
 import {Autocomplete, AutocompleteItem} from "@nextui-org/react";
-import {Context} from "@/App";
 import {useAppContext} from "@/context/AppContext";
-
 
 export const IndividualSelector = ({label, field, fieldState, gender}: {
     label?: string | undefined,

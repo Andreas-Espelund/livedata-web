@@ -10,7 +10,7 @@ const lambSchema = yup.object().shape({
 
 // Main validation schema for the form
 export const birthSchema = yup.object().shape({
-    lambs: yup.array().of(lambSchema),
+    lambs: yup.array().of(lambSchema).required('Minst ett lam må legges til'),
     mother: yup.string().required('Mor er påkrevd'),
     father: yup.string().required('Far er påkrevd'),
     date: yup.string().required('Dato er påkrevd'),

@@ -30,29 +30,26 @@ import {BirthRecord, Individual} from "@/types/types";
 import {addIndividual} from "@/api/firestore/individuals";
 import {addBirthRecord} from "@/api/firestore/registrations";
 import {formatDate} from "@/util/utils";
-import {useAppContext} from "@/context/AppContext";
 import {birthSchema} from "@/validation/birthValidation";
 import useStatus from "@/hooks/useStatus";
 
+
+interface Lamb {
+    id?: string | undefined;
+    gender: string;
+    bottle: string;
+    tag: string;
+}
+
 interface BirthFormData {
-    lambs: [
-        {
-            id?: string;
-            gender: string;
-            bottle: string;
-            tag: string;
-        }
-    ],
+    lambs: Lamb[];
     mother: string;
     father: string;
     date: string;
-    note?: string;
+    note?: string | undefined;
 }
 
 const BirthForm = () => {
-
-    // validation state
-    const {user} = useAppContext();
 
     const {loading, startLoading, error, success, setSuccessState, setErrorState, resetStatus} = useStatus()
 
@@ -73,14 +70,9 @@ const BirthForm = () => {
     });
 
     const onSubmit = async (data: BirthFormData) => {
-        console.log(data)
-        if (!user || !user.authUser) {
-            console.error("User not found")
-            return;
-        }
         startLoading()
         const record: BirthRecord = {
-            date: formatDate(data.date),
+            date: data.date,
             father: data.father,
             lambs: data.lambs.map(e => e.tag),
             mother: data.mother,
@@ -89,7 +81,7 @@ const BirthForm = () => {
 
         const lambs: Individual[] = data.lambs.map(e => {
             const ind: Individual = {
-                birth_date: formatDate(data.date),
+                birth_date: data.date,
                 bottle: Boolean(e.bottle),
                 doc: "",
                 father: data.father,
@@ -101,8 +93,8 @@ const BirthForm = () => {
             return ind
         })
 
-        const promises = lambs.map(e => addIndividual(user?.authUser?.uid, e))
-        promises.push(addBirthRecord(user?.authUser.uid, data.mother, record))
+        const promises = lambs.map(addIndividual)
+        promises.push(addBirthRecord(data.mother, record))
 
         await Promise.all(promises)
             .then(() => {
@@ -150,7 +142,8 @@ const BirthForm = () => {
                             name="father"
                             control={control}
                             render={({field, fieldState}) => (
-                                <BreederSelector label="Far sin ID" field={field} fieldState={fieldState}/>
+                                <BreederSelector label="Far sin ID" {...field}
+                                                 errorMessage={fieldState.error?.message}/>
                             )}
                         />
 
@@ -196,7 +189,7 @@ const BirthForm = () => {
                                         <Tooltip content={"Fjern lam fra listen"}>
                                             <Button onPress={() => remove(index)}
                                                     color="danger"
-                                                    variant="flat" isIconOnly>
+                                                    variant="light" isIconOnly>
                                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                                      strokeWidth={1.5} stroke="currentColor"
                                                      className="w-6 h-6">
@@ -211,7 +204,7 @@ const BirthForm = () => {
                             </div>
                         ))}
 
-                        <Button className={"ml-auto"} variant="light" color="primary" onPress={(e) => addLamb()}>
+                        <Button className={"ml-auto"} variant="light" color="primary" onPress={addLamb}>
                             Legg til lam
                         </Button>
                         <Heading4> Notat </Heading4>

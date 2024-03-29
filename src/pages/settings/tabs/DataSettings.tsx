@@ -1,8 +1,8 @@
-import {Accordion, AccordionItem, Button, Card, Chip, Code, Input, Progress, Tooltip} from "@nextui-org/react";
+import {Accordion, AccordionItem, Button, Card, Chip, Code, Progress} from "@nextui-org/react";
 import {CardBody, CardHeader} from "@nextui-org/card";
 import {Heading2, InfoPopover, NoticeBox, NoticeWrapper} from "@/components";
 import {Individual} from "@/types/types";
-import {useState} from "react";
+import React, {useState} from "react";
 import {useAppContext} from "@/context/AppContext";
 import {addIndividual} from "@/api/firestore/individuals";
 import useStatus from "@/hooks/useStatus";
@@ -12,12 +12,14 @@ import {XIcon} from "@/images/icons";
 export const DataSettings = () => {
 
     const {getIndividualFromID, getBreederFromID, user} = useAppContext()
+
+    const {loading, success, error, startLoading, setSuccessState, setErrorState, resetStatus} = useStatus()
     const [individuals, setIndividual] = useState<Individual[]>([])
     const [faulty, setFaulty] = useState<{ content: string, line: number }[]>([])
     const [registered, setRegistered] = useState(0)
     const [filename, setFilename] = useState("")
-    const {loading, error, success, setErrorState, setSuccessState, startLoading, resetStatus} = useStatus()
-    const [show, setShow] = useState(false)
+
+
     const validData = (bits: string[]): boolean => {
         // check array len
         if (bits.length !== 6) return false
@@ -38,13 +40,13 @@ export const DataSettings = () => {
         if (!(bits[4].length === 5 || bits[4] === "")) return false
 
         // check bottle
-        if (!(bits[5] === "true" || bits[5] === "false")) return false
+        return bits[5] === "true" || bits[5] === "false";
 
-        return true
+
     }
 
-    const handleFileChange = (event) => {
-        const file = event.target.files[0];
+    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
         if (!file) return
         setFilename(file.name)
 
@@ -52,23 +54,22 @@ export const DataSettings = () => {
 
         reader.onload = function (e) {
             // Get the file content
-            const text = e.target.result;
+            const text = e?.target?.result as string | null;
 
             if (!text) return
 
             let curLine = 0
 
+
             let items = text.split(/\r\n|\n/).map((str: string): Individual | undefined => {
                 curLine++;
-                const bits = str.split(',')
-
+                const bits = str.split(',');
 
                 if (!validData(bits)) {
-                    console.log(bits)
-                    setFaulty(e => [...e, {content: str, line: curLine}])
-                    return undefined
+                    if (bits.length === 1 && bits[0] === "") return undefined
+                    setFaulty(e => [...e, {content: str, line: curLine}]);
+                    return undefined;
                 }
-
 
                 return {
                     id: bits[0],
@@ -79,46 +80,38 @@ export const DataSettings = () => {
                     bottle: bits[5] === "true",
                     status: "active",
                     doc: ""
-                }
-
+                };
             });
 
-            items = items.filter(e => e !== undefined)
-            setIndividual(items)
-            console.log(items)
+            items = items.filter((e): e is Individual => e !== undefined); // This cast removes undefined from the type
+            setIndividual(items as Individual[]);
+            console.log(items);
 
         };
-
-        // Read the file as text
         reader.readAsText(file);
-
-
-        // function that does something to the list of strings
-
     };
 
 
     const uploadHandler = () => {
-        document.getElementById("fileupload").click()
+        const fileupload = document.getElementById("fileupload") as HTMLInputElement | null
+        if (fileupload) {
+            fileupload.click()
+        }
+
     }
 
     const registerHandler = async () => {
         if (!user || !user.authUser) return
 
-        console.log(individuals)
-
         startLoading()
-        const promises = individuals.map((ind) => addIndividual(user.authUser?.uid, ind))
-        try {
-            promises.forEach(async promise => {
-                await promise
-                setRegistered(e => e + 1)
-            })
-            setSuccessState()
-        } catch (error: any) {
-            console.error(error)
-            setErrorState(error)
-        }
+        const promises = individuals.map((ind) =>
+            addIndividual(ind)
+                .then(() => setRegistered(e => e + 1))
+        )
+
+        Promise.all(promises)
+            .then(setSuccessState)
+            .catch(setErrorState)
     }
 
     const resetPage = () => {
@@ -127,17 +120,18 @@ export const DataSettings = () => {
         setRegistered(0)
         setFilename("")
         resetStatus()
-        document.getElementById("fileupload").value = ''
+        const upload = document.getElementById("fileupload") as HTMLInputElement | null
+        if (upload) {
+            upload.value = ""
+        }
     }
 
     const removeIndividual = (id: string) => {
-        const items = individuals;
-        setIndividual(items.filter(e => e.id !== id))
+        setIndividual(individuals.filter(e => e.id !== id))
     }
 
     const totalItems = individuals.length
 
-    console.log(faulty)
 
     return (
         <>
@@ -166,11 +160,11 @@ export const DataSettings = () => {
                     <div className={"flex gap-4 items-center"}>
                         <Button
                             onPress={uploadHandler}
-                            variant={"bordered"}
+                            variant={"flat"}
                         >
                             Last opp fil
                         </Button>
-                        <Code>{filename}</Code>
+                        {filename && <Code>{filename}</Code>}
                     </div>
                     <input
                         aria-label={"file upload"}
@@ -182,46 +176,44 @@ export const DataSettings = () => {
                     />
                     {filename &&
                         <Accordion variant={"splitted"}>
-                            {individuals.length !== 0 &&
-                                <AccordionItem aria-label={"valid"} key={"1"} title={<p
-                                    className={"text-success font-semibold"}>{`${individuals.length} ${individuals.length === 1 ? "gyldig individ" : "gyldige individer"}`}</p>}>
-                                    <div className={"flex gap-2 p-2"}>
-                                        {individuals.map((e, i) =>
-                                            <Chip
-                                                endContent={<XIcon/>}
-                                                variant={"flat"}
-                                                color={"success"}
-                                                className={"hover:bg-danger hover:text-white transition-all cursor-pointer"}
-                                                key={e.id}
-                                                onClick={() => removeIndividual(e.id)}
-                                            >
-                                                {e.id}
-                                            </Chip>
-                                        )}
-                                    </div>
-                                </AccordionItem>
-                            }
-                            {faulty.length !== 0 &&
-                                <AccordionItem aria-label={"invalid"} key={"2"} title={<p
-                                    className={"text-danger font-semibold"}>{`${faulty.length} ${faulty.length === 1 ? "ugyldig individ" : "ugyldige individer"}`}</p>}>
-                                    <div className={"grid gap-2"}>
-                                        <ul className={"list-disc bg-warning-100 p-4 rounded-lg"}>
-                                            <p className={"text-lg font-semibold"}>Individ kan være ugyldige
-                                                grunna: </p>
-                                            <li className={"ml-4"}>Linja i fila ikkje følg det forventa formatet</li>
-                                            <li className={"ml-4"}>Eit anna individ med samme ID nummer finnast allerede
-                                                i besetninga
-                                            </li>
-                                        </ul>
-                                        {faulty.map((e) =>
-                                            <div key={e.line} className={"flex gap-2"}>
-                                                <p className={"font-semibold"}>{`Linje ${e.line}:`}</p>
-                                                <p>{e.content}</p>
-                                            </div>
-                                        )}
-                                    </div>
-                                </AccordionItem>
-                            }
+                            <AccordionItem aria-label={"valid"} hidden={individuals.length === 0} key={"1"} title={<p
+                                className={"text-success font-semibold"}>{`${individuals.length} ${individuals.length === 1 ? "gyldig individ" : "gyldige individer"}`}</p>}>
+                                <div className={"flex flex-wrap gap-2 p-2"}>
+                                    {individuals.map((e) =>
+                                        <Chip
+                                            endContent={<XIcon/>}
+                                            variant={"flat"}
+                                            color={"success"}
+                                            className={"hover:bg-danger hover:text-white transition-all cursor-pointer"}
+                                            key={e.id}
+                                            onClick={() => removeIndividual(e.id)}
+                                        >
+                                            {e.id}
+                                        </Chip>
+                                    )}
+                                </div>
+                            </AccordionItem>
+
+                            <AccordionItem aria-label={"invalid"} hidden={faulty.length === 0} key={"2"} title={<p
+                                className={"text-danger font-semibold"}>{`${faulty.length} ${faulty.length === 1 ? "ugyldig individ" : "ugyldige individer"}`}</p>}>
+                                <div className={"grid gap-2"}>
+                                    <ul className={"list-disc bg-warning-100 p-4 rounded-lg"}>
+                                        <p className={"text-lg font-semibold"}>Individ kan være ugyldige
+                                            grunna: </p>
+                                        <li className={"ml-4"}>Linja i fila ikkje følg det forventa formatet</li>
+                                        <li className={"ml-4"}>Eit anna individ med samme ID nummer finnast allerede
+                                            i besetninga
+                                        </li>
+                                    </ul>
+                                    {faulty.map((e) =>
+                                        <div key={e.line} className={"flex gap-2"}>
+                                            <p className={"font-semibold"}>{`Linje ${e.line}:`}</p>
+                                            <p>{e.content}</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </AccordionItem>
+
                         </Accordion>
                     }
 
@@ -235,10 +227,11 @@ export const DataSettings = () => {
                             color={"success"}
                         />
 
-                        <Button color={"primary"} variant={"bordered"} onPress={resetPage}>
+                        <Button color={"danger"} variant={"light"} onPress={resetPage}>
                             Nullstill
                         </Button>
-                        <Button color={"primary"} isDisabled={individuals.length === 0} onPress={registerHandler}>
+                        <Button color={"primary"} isLoading={loading} isDisabled={individuals.length === 0}
+                                onPress={registerHandler}>
                             Registrer individer
                         </Button>
                     </div>
@@ -246,9 +239,10 @@ export const DataSettings = () => {
             </Card>
 
             <NoticeWrapper>
-                {success && <NoticeBox title={"Suksess"} message={`${registered} individer registrert`} type={"success"}
-                                       noTimeout={false}/>}
-                {error && <NoticeBox title={"Feil"} message={"Noko gjekk gale"} type={"danger"} noTimeout={false}/>}
+                <NoticeBox title={"Suksess"} message={`${registered} individer registrert`} type={"success"}
+                           visible={success} onClose={resetStatus}/>
+                <NoticeBox title={"Feil"} message={error?.message || "Noko gjekk gale"} type={"danger"}
+                           visible={error !== null} onClose={resetStatus}/>
             </NoticeWrapper>
         </>
     )

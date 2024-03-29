@@ -68,44 +68,39 @@ export const AppProvider: React.FC<AppProviderProps> = ({children}) => {
 
     // Fetch data when user state changes
     useEffect(() => {
-        if (user && user.authUser) {
-            const unsubscribe = individualListener(user.authUser.uid, setIndividuals)
-            return unsubscribe;
-        }
+        if (!user) return;
+        return individualListener(setIndividuals);
+
     }, [user]);
 
     useEffect(() => {
-        if (user && user.authUser) {
-            const unsubscribe = getBreedersListener(user.authUser.uid, setBreeders)
-            return unsubscribe
-        }
+        if (!user) return;
+        return getBreedersListener(setBreeders)
+
     }, [user]);
 
     useEffect(() => {
-        if (user && user.authUser) {
-            const unsubscribe = getMedicineRegistryListener(user.authUser.uid, setMedicines)
-            return unsubscribe
-        }
+        if (!user) return;
+        return getMedicineRegistryListener(setMedicines)
     }, [user]);
 
     // Authentication state change
     useEffect(() => {
         return onAuthStateChanged(auth, (currentUser) => {
-            console.log("auth state changed to", currentUser)
             if (!currentUser) {
                 setUser(undefined)
                 setLoading(false)
                 return
             }
-            getUserDetails(currentUser?.uid).then(data => {
-                console.log("fetching user")
-                const appUser: AppUser = {
-                    authUser: currentUser || undefined,
-                    userDetail: data
-                }
-                setUser(appUser)
-                setLoading(false);
-            })
+            getUserDetails()
+                .then(data => {
+                    const appUser: AppUser = {
+                        authUser: currentUser || undefined,
+                        userDetail: data
+                    }
+                    setUser(appUser)
+                    setLoading(false);
+                })
         });
     }, []);
 
@@ -123,7 +118,17 @@ export const AppProvider: React.FC<AppProviderProps> = ({children}) => {
     }, [breeders])
     return (
         <AppContext.Provider
-            value={{individuals, breeders, user, getIndividual, size, loading, getIndividualFromID, getBreederFromID, medicines}}>
+            value={{
+                individuals,
+                breeders,
+                user,
+                getIndividual,
+                size,
+                loading,
+                getIndividualFromID,
+                getBreederFromID,
+                medicines
+            }}>
             {children}
         </AppContext.Provider>
     );

@@ -1,4 +1,3 @@
-
 import {Kbd, Tab, Tabs} from "@nextui-org/react";
 import BirthForm from "@/pages/registration/forms/BirthForm";
 import {Heading1, InfoPopover} from "@/components";
@@ -7,9 +6,7 @@ import DeactivationForm from "@/pages/registration/forms/DeactivationForm";
 import NoteForm from '@/pages/registration/forms/NoteForm';
 import {useAppContext} from "@/context/AppContext";
 import {MedicineForm} from "@/pages/registration/forms/MedicineForm";
-import {Key, useEffect, useState} from "react";
-
-
+import {useEffect, useState} from "react";
 
 const tabs = [
     {
@@ -39,7 +36,7 @@ const tabs = [
     },
 ]
 export const RegistrationPage = () => {
-    const { size } = useAppContext()
+    const {size} = useAppContext()
     const [selectedKey, setSelectedKey] = useState(localStorage.getItem("selected_tab") || tabs[0].key)
 
 
@@ -48,9 +45,9 @@ export const RegistrationPage = () => {
         localStorage.setItem("selected_tab", selectedKey);
     }, [selectedKey]);
 
-    const pressHanlder = (event) => {
+    const pressHandler = (event: { key: string }) => {
         const activeElement = document.activeElement;
-        const tagName = activeElement.tagName.toLowerCase();
+        const tagName = activeElement?.tagName.toLowerCase() || "";
 
         // If focused on form elements, ignore keypress for tab switching
         if (tagName === 'input' || tagName === 'textarea' || tagName === 'select') {
@@ -64,8 +61,8 @@ export const RegistrationPage = () => {
     };
 
     useEffect(() => {
-        window.addEventListener("keypress", pressHanlder)
-        return () => window.removeEventListener("keypress",pressHanlder)
+        window.addEventListener("keypress", pressHandler)
+        return () => window.removeEventListener("keypress", pressHandler)
     }, []);
     return (
         <div className="w-full lg:w-4/5 m-auto p-2 sm:p-8 grid gap-4" id={"tab-wrapper"}>
@@ -75,8 +72,8 @@ export const RegistrationPage = () => {
                     <p className={"font-bold"}>Snarvegar</p>
                     <div className={"flex flex-col gap-2"}>
                         {tabs.map((item, i) =>
-                            <p className={"flex gap-2 items-center"}>
-                                <Kbd>{i+1}</Kbd>
+                            <p className={"flex gap-2 items-center"} key={item.key}>
+                                <Kbd>{i + 1}</Kbd>
                                 {item.label}
                             </p>
                         )}

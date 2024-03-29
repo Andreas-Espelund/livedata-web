@@ -1,4 +1,3 @@
-import {useAppContext} from "@/context/AppContext";
 import {Controller, useForm} from "react-hook-form";
 import useStatus from "@/hooks/useStatus";
 import {yupResolver} from "@hookform/resolvers/yup";
@@ -28,7 +27,6 @@ interface DeactivationFormData {
 
 
 const DeactivationForm = () => {
-    const {user} = useAppContext()
 
     const {loading, error, success, startLoading, setSuccessState, setErrorState, resetStatus} = useStatus()
 
@@ -42,17 +40,15 @@ const DeactivationForm = () => {
     });
 
     const onSubmit = async (data: DeactivationFormData) => {
-
-        if (!user || !user.authUser) return;
         startLoading()
 
         const statusRecord: StatusRecord = {
-            date: formatDate(data.date),
+            date: data.date,
             individual: data.individual,
             note: data.note || "",
             status: data.status
         }
-        await updateIndividualStatus(user.authUser.uid, statusRecord)
+        await updateIndividualStatus(statusRecord)
             .then(setSuccessState)
             .catch(setErrorState)
             .finally(reset)
@@ -101,7 +97,7 @@ const DeactivationForm = () => {
                                 name="status"
                                 control={control}
                                 render={({field, fieldState}) => (
-                                    <DeactivationSelector field={field} fieldState={fieldState}/>
+                                    <DeactivationSelector {...field} errorMessage={fieldState.error?.message}/>
                                 )}
                             />
                             <Controller
@@ -111,9 +107,14 @@ const DeactivationForm = () => {
                                     <Textarea {...field} placeholder="Skriv inn notat" rows={4} required/>
                                 )}
                             />
-                            <Button type="submit" color="danger" className={"ml-auto"} isLoading={loading}>
-                                Bekreft utmelding
-                            </Button>
+                            <div className={"flex gap-4 justify-end-end ml-auto"}>
+                                <Button type="reset" color={"danger"} variant={"light"}>
+                                    Nullstill
+                                </Button>
+                                <Button type="submit" color="primary" isLoading={loading}>
+                                    Bekreft utmelding
+                                </Button>
+                            </div>
                         </Stack>
                     </form>
                 </CardBody>

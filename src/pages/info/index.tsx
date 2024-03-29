@@ -1,5 +1,5 @@
 import {Heading1} from "@/components/Headings";
-import {Accordion, AccordionItem, Button, Card, Skeleton} from "@nextui-org/react";
+import {Accordion, AccordionItem, Button, Card, Link, Skeleton} from "@nextui-org/react";
 import {CardBody, CardHeader} from "@nextui-org/card";
 import {ChevronLeft} from "@/images/icons";
 import {useNavigate} from "react-router-dom";
@@ -41,7 +41,7 @@ export const InfoPage = () => {
         }
     ]
 
-    const guides = Array.of(1,2,3,4)
+    const guides = Array.of(1, 2, 3, 4)
     return (
         <div className={"p-10 max-w-[1000px] m-auto grid gap-10"}>
             <div>
@@ -64,14 +64,17 @@ export const InfoPage = () => {
 
             <Heading1>Tips og triks</Heading1>
             <Card>
-                <CardHeader className={"text-lg font-medium"}> Some shit </CardHeader>
+                <CardHeader className={"text-xl font-medium"}> Kjeder du deg? </CardHeader>
                 <CardBody>
-                    Idk tbh
+                    <Link className={"text-blue-400"} target={"_blank"}
+                          href="https://github.com/Andreas-Espelund/livedata-web"> Sjekk ut
+                        på
+                        github da vel</Link>
                 </CardBody>
             </Card>
 
 
-            <Heading1>Guider</Heading1>
+            <Heading1>Guider (Kjem kanskje)</Heading1>
             <div className={"flex gap-4 justify-between"}>
                 {guides.map((item) =>
                     <Placholder key={item}/>

@@ -1,34 +1,38 @@
-import { useState} from 'react';
-import {useForm, Controller} from 'react-hook-form';
-import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '@/api/firebase.js'; // Update this path
 import {Input, Button, Card} from '@nextui-org/react';
 import {CardBody} from "@nextui-org/card";
 import {Navigate, NavLink, useNavigate} from "react-router-dom";
 import {NoticeBox} from "@/components/NoticeBox";
 import {useAppContext} from "@/context/AppContext";
+import useStatus from "@/hooks/useStatus";
+import {NoticeWrapper} from "@/components";
+import {Controller, useForm} from "react-hook-form";
+import {signInWithEmailAndPassword} from 'firebase/auth';
+import {auth} from "@/api/firebase";
+
+
+interface LoginFormData {
+    email: string;
+    password: string;
+
+}
 
 export const LoginPage = () => {
-    const { reset, control, handleSubmit, formState: { errors } } = useForm();
-    const [error, setError] = useState(false)
-    const [loading, setLoading] = useState(false)
+    const {loading, error, success, setSuccessState, setErrorState, startLoading, resetStatus} = useStatus()
+    const {control, handleSubmit, formState: {errors}} = useForm<LoginFormData>();
+
     const navigate = useNavigate()
-
     const {user} = useAppContext()
-    const onSubmit = async (data) => {
-        setLoading(true)
-        setError(false)
-        const { email, password } = data;
 
-        try {
-            await signInWithEmailAndPassword(auth, email, password);
-            navigate('/')
-        } catch (error) {
-            console.error(error);
-            setError(true)
-        } finally {
-            setLoading(false)
-        }
+
+    const onSubmit = async (data: LoginFormData) => {
+        startLoading()
+
+        signInWithEmailAndPassword(auth, data.email, data.password)
+            .then(() => {
+                setSuccessState()
+                navigate('/')
+            })
+            .catch(setErrorState)
     };
 
     if (user) {
@@ -43,17 +47,19 @@ export const LoginPage = () => {
                         <Controller
                             name="email"
                             control={control}
-                            rules={{ required: true }} // Add more validation as needed
-                            render={({ field }) => (
-                                <Input errorMessage={errors.email && "Påkrevd"} type="email" {...field} label="Epost" isRequired/>
+                            rules={{required: true}} // Add more validation as needed
+                            render={({field}) => (
+                                <Input errorMessage={errors.email && "Påkrevd"} type="email" {...field} label="Epost"
+                                       isRequired/>
                             )}
                         />
                         <Controller
                             name="password"
                             control={control}
-                            rules={{ required: true }} // Add more validation as needed
-                            render={({ field }) => (
-                                <Input errorMessage={errors.password && "Påkrevd"} type="password" {...field} label="Passord" isRequired/>
+                            rules={{required: true}} // Add more validation as needed
+                            render={({field}) => (
+                                <Input errorMessage={errors.password && "Påkrevd"} type="password" {...field}
+                                       label="Passord" isRequired/>
                             )}
                         />
                         <Button isLoading={loading} type="submit" color={"primary"}>Logg inn</Button>
@@ -66,9 +72,12 @@ export const LoginPage = () => {
                 <NavLink className={"m-auto italic"} to={"/forgot"}> Glemt passord?</NavLink>
             </div>
 
-            <div className={"fixed top-10  flex right-4"}>
-                {error && <NoticeBox title={"Kunne ikkje logge inn"} message={"Sjekk at passord og brukernavn er riktig"} type={"warning"}/>}
-            </div>
+            <NoticeWrapper>
+                <NoticeBox title={"Logget inn"} message={"Du er no innlogga"} type={"success"} visible={success}
+                           onClose={resetStatus}/>
+                <NoticeBox title={"Kunne ikkje logge inn"} message={"Sjekk at passord og brukernavn er riktig"}
+                           type={"warning"} visible={error !== null} onClose={resetStatus}/>
+            </NoticeWrapper>
         </div>
     );
 };

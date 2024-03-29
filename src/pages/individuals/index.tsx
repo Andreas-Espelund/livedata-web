@@ -1,4 +1,4 @@
-import React, {useEffect} from "react";
+import React, {useEffect, useMemo} from "react";
 import {
     Button, ButtonGroup,
     Chip,
@@ -6,7 +6,7 @@ import {
     DropdownItem,
     DropdownMenu,
     DropdownTrigger,
-    Input, Modal,
+    Input, Modal, ModalBody, ModalContent, ModalHeader,
     Pagination,
     Selection,
     Slider,
@@ -22,13 +22,13 @@ import {
 import {SearchIcon, VerticalDotsIcon} from "../../../public/icons";
 import {Individual} from "@/types/types";
 import {Heading1} from "@/components/Headings";
-import {BoltIcon, HeartIcon, PlusIcon, PrinterIcon} from "@/images/icons";
-import MedicineRegistrationModal from "@/pages/individuals/MedicineRegistrationModal";
 import {useAppContext} from "@/context/AppContext";
 import {NavLink} from "react-router-dom";
 
-import PdfGenerator, {generatePdf} from "@/util/GeneratePDF";
-import ExportModal from "@/pages/individuals/ExportModal";
+import ExportModal from "@/pages/individuals/Modals/ExportModal";
+import {BoltIcon, HeartIcon, PrinterIcon, WarningIcon} from "@/images/icons";
+import MassDeactivation from "@/pages/individuals/Modals/MassDeactivation";
+import MassMedicine from "@/pages/individuals/Modals/MedicineRegistrationModal";
 
 
 const columns = [
@@ -51,13 +51,11 @@ export const statusMap = {
     "euthanized": "Avlivet",
     "inactive": "Inaktiv"
 }
-
-
 const capitalize = (str: string) => {
     return str.toUpperCase()
 }
 
-const DEFAULTS: Record<string, any> = {
+const DEFAULTS: Record<string, string[] | number[] | number> = {
     "columns": ["id", "birth_date", "status", "father", "mother", "gender", "actions", "bottle"],
     "status": ["active"],
     "genders": ["male", "female"],
@@ -67,7 +65,7 @@ const DEFAULTS: Record<string, any> = {
 
 
 // Function to get value from local storage or return default
-const get_local_or_default_value = (key: string): any => {
+const get_local_or_default_value = (key: string): string | [] | number => {
     const storedItem = localStorage.getItem(key);
 
     return storedItem !== null ? JSON.parse(storedItem) : DEFAULTS[key]
@@ -77,18 +75,18 @@ const get_local_or_default_value = (key: string): any => {
 
 export const IndividualsPage = () => {
     const {isOpen, onOpen, onOpenChange} = useDisclosure();
-    const {isOpen: isMedicineOpen, onOpen: onMedicineOpen, onOpenChange: onMedicineOpenChange} = useDisclosure();
     const {individuals, breeders} = useAppContext()
 
+    const [selectedModal, setSelectedModal] = React.useState<string>("")
     const currentYear = new Date().getFullYear()
     const [filterValue, setFilterValue] = React.useState("");
     const [selectedKeys, setSelectedKeys] = React.useState<Selection>(new Set([]));
-    const [visibleColumns, setVisibleColumns] = React.useState<Selection>(new Set(get_local_or_default_value("columns")));
-    const [genderFilter, setGenderFilter] = React.useState<Selection>(new Set(get_local_or_default_value("genders")));
-    const [activeFilter, setActiveFilter] = React.useState<Selection>(new Set(get_local_or_default_value("status")));
-    const [rowsPerPage, setRowsPerPage] = React.useState(get_local_or_default_value("pages"));
+    const [visibleColumns, setVisibleColumns] = React.useState<Selection>(new Set(get_local_or_default_value("columns") as string[]));
+    const [genderFilter, setGenderFilter] = React.useState<Selection>(new Set(get_local_or_default_value("genders") as string[]));
+    const [activeFilter, setActiveFilter] = React.useState<Selection>(new Set(get_local_or_default_value("status") as string[]));
+    const [rowsPerPage, setRowsPerPage] = React.useState<number>(get_local_or_default_value("pages") as number);
     const [page, setPage] = React.useState(1);
-    const [ageFilter, setAgeFilter] = React.useState<number[] | number>(get_local_or_default_value("year"))
+    const [ageFilter, setAgeFilter] = React.useState<number[] | number>(get_local_or_default_value("year") as number[])
     const [sortDescriptor, setSortDescriptor] = React.useState<SortDescriptor>({
         column: "tag",
         direction: "ascending",
@@ -117,11 +115,17 @@ export const IndividualsPage = () => {
     }, [rowsPerPage]);
 
 
+    const handleModalChange = (selectedModalType: Selection) => {
+        const selectedModal = Array.from(selectedModalType)[0].toString()
+        setSelectedModal(selectedModal)
+        onOpen()
+    }
+
     const clearFilterData = () => {
-        setAgeFilter(DEFAULTS["year"])
-        setVisibleColumns(new Set(DEFAULTS["columns"]))
-        setGenderFilter(new Set(DEFAULTS["genders"]))
-        setActiveFilter(new Set(DEFAULTS["status"]))
+        setAgeFilter(DEFAULTS["year"] as number[])
+        setVisibleColumns(new Set(DEFAULTS["columns"] as string[]))
+        setGenderFilter(new Set(DEFAULTS["genders"] as string[]))
+        setActiveFilter(new Set(DEFAULTS["status"] as string[]))
     }
 
     const headerColumns = React.useMemo(() => {
@@ -137,7 +141,7 @@ export const IndividualsPage = () => {
     const hasSearchFilter = Boolean(filterValue);
 
     const filteredItems = React.useMemo(() => {
-        let filtered = [...individuals.values()]
+        let filtered = Array.from(individuals.values());
 
         // apply search filter
         if (hasSearchFilter) {
@@ -171,7 +175,13 @@ export const IndividualsPage = () => {
         }
 
         return filtered;
-    }, [individuals, filterValue, genderFilter, ageFilter, activeFilter]);
+    }, [individuals, hasSearchFilter, genderFilter, ageFilter, activeFilter, filterValue, currentYear]);
+
+    const selectedFilteredItems: Individual[] = useMemo(() => {
+        if (selectedKeys === "all") return filteredItems;
+        const keys = Array.from(selectedKeys);
+        return filteredItems.filter((ind) => keys.includes(ind.doc))
+    }, [selectedKeys, filteredItems])
 
 
     /*
@@ -189,18 +199,13 @@ export const IndividualsPage = () => {
 
     const sortedItems = React.useMemo(() => {
         return [...items].sort((a: Individual, b: Individual) => {
-            const first = a[sortDescriptor.column as keyof Individual] as number;
-            const second = b[sortDescriptor.column as keyof Individual] as number;
+            const first = a[sortDescriptor.column as keyof Individual] as unknown as number;
+            const second = b[sortDescriptor.column as keyof Individual] as unknown as number;
             const cmp = first < second ? -1 : first > second ? 1 : 0;
 
             return sortDescriptor.direction === "descending" ? -cmp : cmp;
         });
     }, [sortDescriptor, items]);
-
-
-    // for medicine modal
-    const keyArray = Array.from(selectedKeys)
-    //const modalItems = selectedKeys === "all" ? filteredItems : individuals.filter(e => keyArray.includes(e.doc))
 
 
     /*
@@ -217,13 +222,13 @@ export const IndividualsPage = () => {
                 );
             case "birth_date":
                 return (
-                    <p className="text-bold text-small capitalize">{cellValue?.slice(0, 11)}</p>
+                    <p className="text-bold text-small capitalize">{cellValue?.toString().slice(0, 11)}</p>
                 );
             case "status":
                 return (
                     <Chip className="capitalize" color={cellValue === "active" ? 'success' : 'danger'} size="sm"
                           variant="flat">
-                        {statusMap[cellValue] || cellValue}
+                        {statusMap[cellValue as keyof typeof statusMap] || cellValue}
                     </Chip>
                 );
             case "actions":
@@ -244,10 +249,10 @@ export const IndividualsPage = () => {
                     </div>
                 );
             case "father":
-                if (Object.keys(cellValue).length === 0) {
+                if (Object.keys(cellValue as string).length === 0) {
                     return <p>-</p>
                 } else {
-                    const father = breeders.get(cellValue)
+                    const father = breeders.get(cellValue as string)
 
                     if (father) {
                         return (
@@ -262,9 +267,8 @@ export const IndividualsPage = () => {
 
                 }
             case "mother":
-
                 return (
-                    <p>{individuals.get(cellValue)?.id || '-'}</p>
+                    <p>{individuals.get(cellValue as string)?.id || '-'}</p>
                 );
             case "gender":
                 return (
@@ -281,7 +285,7 @@ export const IndividualsPage = () => {
             default:
                 return cellValue;
         }
-    }, [individuals]);
+    }, [breeders, individuals]);
 
 
     const onRowsPerPageChange = React.useCallback((selectedKeys: Selection) => {
@@ -331,7 +335,7 @@ export const IndividualsPage = () => {
                         defaultValue={ageFilter}
                         formatOptions={{useGrouping: false}}
                         onChange={(e) => {
-                            Array.isArray(e) ? setAgeFilter(e) : setAgeFilter(Array.from(e))
+                            Array.isArray(e) ? setAgeFilter(e) : setAgeFilter([e])
                         }}
                     />
                     <ButtonGroup>
@@ -383,30 +387,33 @@ export const IndividualsPage = () => {
                             </DropdownMenu>
                         </Dropdown>
                     </ButtonGroup>
-                    <Button onPress={onOpen} variant={"shadow"} size={"lg"} color={"primary"}
-                            startContent={<PrinterIcon/>}>
-                        Skriv ut
-                    </Button>
-                    <Button onPress={onMedicineOpen} variant={"shadow"} size={"lg"} color={"secondary"}
-                            isDisabled={selectedKeys !== "all" && selectedKeys.size === 0}
-                            startContent={<HeartIcon/>}>
-                        Medisin
-                    </Button>
+
+                    <Dropdown>
+                        <DropdownTrigger>
+                            <Button variant={"shadow"} size={"lg"} startContent={<BoltIcon/>}
+                                    color={"warning"} className={"text-white"}
+                                    isDisabled={!(selectedKeys === "all" || selectedKeys.size > 0)}>
+                                Handlinger
+                            </Button>
+                        </DropdownTrigger>
+                        <DropdownMenu aria-label={"export selector"} disallowEmptySelection selectionMode={"single"}
+                                      onSelectionChange={(k) => handleModalChange(k)}>
+                            <DropdownItem key={"export"} startContent={<PrinterIcon/>}
+                                          color={"primary"}>Eksporter</DropdownItem>
+                            <DropdownItem key={"medicine"} startContent={<HeartIcon/>} color={"secondary"}>Ny
+                                medisinering</DropdownItem>
+
+                            <DropdownItem key={"mass_deactivation"} startContent={<WarningIcon/>} color={"danger"}>
+                                Utmelding
+                            </DropdownItem>
+                        </DropdownMenu>
+                    </Dropdown>
+
 
                 </div>
             </div>
         );
-    }, [
-        filterValue,
-        visibleColumns,
-        onSearchChange,
-        individuals.size,
-        hasSearchFilter,
-        genderFilter,
-        ageFilter,
-        activeFilter,
-        keyArray
-    ]);
+    }, [filterValue, onSearchChange, currentYear, ageFilter, genderFilter, activeFilter, visibleColumns, selectedKeys, onClear]);
 
     const bottomContent = React.useMemo(() => {
         return (
@@ -460,7 +467,7 @@ export const IndividualsPage = () => {
                 </div>
             </div>
         );
-    }, [selectedKeys, items.length, page, pages, hasSearchFilter, onRowsPerPageChange, rowsPerPage,]);
+    }, [selectedKeys, page, pages, onRowsPerPageChange, rowsPerPage, filteredItems.length]);
 
 
     return (
@@ -501,10 +508,30 @@ export const IndividualsPage = () => {
                     )}
                 </TableBody>
             </Table>
-            <ExportModal isOpen={isOpen} onClose={onOpenChange} toPrint={filteredItems} columns={visibleColumns}/>
-            <MedicineRegistrationModal isOpen={isMedicineOpen} onClose={onMedicineOpenChange}
-                                       selectedKeys={selectedKeys} individuals={filteredItems}/>
 
+            <Modal isOpen={isOpen} onClose={onOpenChange}>
+                <ModalContent>
+                    <ModalHeader>
+                        {selectedModal === "export" && "Skriv ut liste"}
+                        {selectedModal === "medicine" && "Ny medisinering"}
+                        {selectedModal === "mass_deactivation" && "Utmelding"}
+                    </ModalHeader>
+                    <ModalBody className={"mb-4"}>
+                        {selectedModal === "export" &&
+                            <ExportModal selectedCols={visibleColumns} items={selectedFilteredItems}/>}
+
+                        {
+                            selectedModal === "medicine" &&
+                            <MassMedicine items={selectedFilteredItems}/>
+                        }
+                        {
+                            selectedModal === "mass_deactivation" &&
+                            <MassDeactivation items={selectedFilteredItems}/>
+                        }
+                    </ModalBody>
+
+                </ModalContent>
+            </Modal>
         </div>
     );
 }

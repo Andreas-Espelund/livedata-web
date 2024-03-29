@@ -4,7 +4,6 @@ import {CardHeader} from "@nextui-org/card";
 import {Individual} from "@/types/types";
 import {formatDate} from "@/util/utils";
 import {addIndividual} from "@/api/firestore/individuals";
-import {useAppContext} from "@/context/AppContext";
 import {
     InfoPopover,
     BreederSelector,
@@ -25,7 +24,7 @@ interface RegisterIndividualFormData {
     father?: string | null;
     birth_date: string;
     gender: string;
-    bottle: boolean
+    bottle: string;
 }
 
 const RegisterIndividualForm = () => {
@@ -36,24 +35,22 @@ const RegisterIndividualForm = () => {
             birth_date: formatDate(new Date()),
             father: null,
             mother: null,
-            bottle: false
+            bottle: "0"
         }
     });
 
-    const {user} = useAppContext()
     const {loading, error, success, startLoading, setSuccessState, setErrorState, resetStatus} = useStatus()
 
     const onSubmit = async (data: RegisterIndividualFormData) => {
         startLoading()
-        console.log("FORMDATA", data);
-
         const individual = {
             ...data,
-            status: "active"
+            status: "active",
+            bottle: data.bottle === "1"
         } as Individual;
 
         console.log('submitting')
-        await addIndividual(user?.authUser?.uid, individual)
+        await addIndividual(individual)
             .then(setSuccessState)
             .catch(setErrorState)
     };
@@ -96,7 +93,8 @@ const RegisterIndividualForm = () => {
                                 name="father"
                                 control={control}
                                 render={({field, fieldState}) => (
-                                    <BreederSelector label={"Far sin id"} field={field} fieldState={fieldState}/>
+                                    <BreederSelector label={"Far sin id"} {...field}
+                                                     errorMessage={fieldState.error?.message}/>
                                 )}
                             />
                             <Controller

@@ -8,7 +8,7 @@ import {
 } from "@nextui-org/react";
 import {Heading2} from "@/components/";
 import {useAppContext} from "@/context/AppContext";
-import React, {useMemo} from "react";
+import {useMemo} from "react";
 import MedicineRegistryModal from "@/pages/settings/tabs/MedicineRegistryModal";
 import {deleteMedicineRegistry} from "@/api/firestore/medicineRegistry";
 
@@ -16,13 +16,12 @@ import {deleteMedicineRegistry} from "@/api/firestore/medicineRegistry";
 const MedicineRegistry = () => {
 
     const {isOpen, onClose, onOpenChange} = useDisclosure()
-    const {medicines, user} = useAppContext()
+    const {medicines} = useAppContext()
 
 
     const deleteMedicine = (name: string) => {
-        console.log("Deleting medicine", name)
-        deleteMedicineRegistry(user?.authUser?.uid || "", name)
-            .then(() => console.log("Deleted medicine", name))
+        deleteMedicineRegistry(name).then(() => {
+        })
     }
 
     const topContent = useMemo(() => {

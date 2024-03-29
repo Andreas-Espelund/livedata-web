@@ -1,14 +1,15 @@
-import {useContext} from 'react';
 import {useForm, Controller} from 'react-hook-form';
 import {createUserWithEmailAndPassword} from 'firebase/auth';
 import {auth} from '@/api/firebase.js';
 import {Input, Button, Card, Divider} from '@nextui-org/react';
 import {CardBody} from "@nextui-org/card";
 import {Navigate, NavLink} from "react-router-dom";
-import {Context} from "@/App";
+
 import {useAppContext} from "@/context/AppContext";
 import {addUserDetails} from "@/api/firestore/users";
 import {UserDetail} from "@/types/types";
+import useStatus from "@/hooks/useStatus";
+import {NoticeBox, NoticeWrapper} from "@/components";
 
 
 interface FormInput {
@@ -24,44 +25,37 @@ interface FormInput {
 
 
 export const SignUpPage = () => {
-    const {reset, control, handleSubmit, formState: {errors}} = useForm<FormInput>({
+
+    const {success, error, loading, setSuccessState, setErrorState, startLoading, resetStatus} = useStatus()
+    const {control, handleSubmit, formState: {errors}} = useForm<FormInput>({
         reValidateMode: "onChange"
     });
     const {user} = useAppContext()
     const onSubmit = async (data: FormInput) => {
+        startLoading()
         const {email, password, verify} = data;
         console.log(email, password, verify)
         if (password !== verify) {
             alert("Passwords do not match");
+            resetStatus()
             return;
         }
 
-        try {
-            const userCred = await createUserWithEmailAndPassword(auth, email, password);
-            const user = userCred.user
-
-            const userDetails: UserDetail = {
-                firstname: data.firstname,
-                lastname: data.lastname,
-                birthdate: data.birthdate,
-                address: data.address,
-                prodno: data.prodno,
-                email: data.email // Optional, if you want to store email in Firestore as well
-            };
-
-            console.log(userDetails)
-
-            await addUserDetails(user.uid, userDetails)
-
-
-            alert("success")
-            reset()
-            // Handle successful sign-up (e.g., redirect to login page or dashboard)
-        } catch (error) {
-            console.error(error)
-            alert(error)
-            // Handle errors (e.g., email already in use, weak password)
-        }
+        createUserWithEmailAndPassword(auth, email, password)
+            .then(() => {
+                const userDetails: UserDetail = {
+                    firstname: data.firstname,
+                    lastname: data.lastname,
+                    birthdate: data.birthdate,
+                    address: data.address,
+                    prodno: data.prodno,
+                    email: data.email // Optional, if you want to store email in Firestore as well
+                };
+                addUserDetails(userDetails)
+                    .then(setSuccessState)
+                    .catch(setErrorState)
+            })
+            .catch(setErrorState)
     };
 
     if (user) {
@@ -164,13 +158,21 @@ export const SignUpPage = () => {
                                        label="Gjenta passord" isRequired color={errors.verify ? "danger" : undefined}/>
                             )}
                         />
-                        <Button type="submit" color={"primary"}>Lag bruker</Button>
+                        <Button type="submit" color={"primary"} isLoading={loading}>Lag bruker</Button>
                     </form>
                 </CardBody>
             </Card>
             <div className={"grid gap-2"}>
                 <NavLink className={"m-auto italic"} to={"/login"}> Gå til inlogging</NavLink>
             </div>
+
+            <NoticeWrapper>
+                <NoticeBox title={"Suksess"} message={"Bruker registrert"} type={"success"} visible={success}
+                           onClose={resetStatus}/>
+                <NoticeBox title={"Noko gjekk gale"} message={error?.toString() || "Noko gjekk gale"} type={"danger"}
+                           visible={error !== null}
+                           onClose={resetStatus}/>
+            </NoticeWrapper>
         </div>
     );
 };

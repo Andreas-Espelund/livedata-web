@@ -9,7 +9,11 @@ import {Selection} from "@nextui-org/react";
 
 
 export const generatePdf = (individuals: Individual[], selectedCols: Selection, title: string) => {
-    const doc = new jsPDF();
+    const doc = new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: "a4"
+    });
 
     doc.setFont("helvetica", "bold")
     doc.setFontSize(20)
@@ -36,29 +40,24 @@ export const generatePdf = (individuals: Individual[], selectedCols: Selection, 
     };
 
     // Filter the headers based on selected columns
-    const tableHeaders = cols.map(colId => columnMapping[colId]);
+    const tableHeaders = cols.map(colId => columnMapping[colId as keyof typeof columnMapping]);
 
     const tableRows = individuals.map(individual => {
         return cols.map(colId => {
-            if (colId === 'bottle') {
-                return individual.bottle ? 'Kopp' : ''; // Assuming bottle is a boolean
+            switch (colId) {
+                case 'bottle':
+                    return individual.bottle ? 'Kopp' : '';
+                case 'father':
+                    return individual.father || '-'
+                case 'mother':
+                    return individual.mother || '-'
+                case 'gender':
+                    return individual.gender === "female" ? "Søye" : "Veir"
+                case 'status':
+                    return statusMap[individual.status as keyof typeof statusMap] || individual.status
+                default:
+                    return individual[colId as keyof Individual] || colId;
             }
-            if (colId == 'father') {
-                return individual.father || '-'
-            }
-            if (colId == 'mother') {
-                return individual.mother || '-'
-            }
-            if (colId == 'gender') {
-                return individual.gender === "female" ? "Søye" : "Veir"
-            }
-            if (colId == 'status') {
-                return statusMap[individual[colId]]
-            }
-            if (colId == 'birth_date') {
-                return individual[colId]
-            }
-            return individual[colId] || colId;
         });
     });
 

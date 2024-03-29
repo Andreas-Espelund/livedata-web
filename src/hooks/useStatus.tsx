@@ -1,33 +1,33 @@
-import { useState } from "react";
+import {useState} from "react";
 
 const useStatus = () => {
     const [loading, setLoading] = useState<boolean>(false);
-    const [error, setError] = useState<string | null>(null); // Use null to represent no error
+    const [error, setError] = useState<Error | null>(null); // Use null to represent no error
     const [success, setSuccess] = useState<boolean>(false);
 
     // Function to start a loading process
-    const startLoading = ():void => {
+    const startLoading = (): void => {
         setLoading(true);
         setError(null);
         setSuccess(false);
     };
 
     // Function to set an error
-    const setErrorState = (error: unknown):void => {
+    const setErrorState = (error: Error): void => {
         setLoading(false);
         setError(error);
         setSuccess(false);
     };
 
     // Function to set success
-    const setSuccessState = ():void => {
+    const setSuccessState = (): void => {
         setLoading(false);
         setError(null);
         setSuccess(true);
     };
 
     // Reset all states
-    const resetStatus = ():void => {
+    const resetStatus = (): void => {
         setLoading(false);
         setError(null);
         setSuccess(false);

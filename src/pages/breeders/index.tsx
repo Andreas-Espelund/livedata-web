@@ -32,18 +32,24 @@ import {NoticeBox, NoticeWrapper} from "@/components/";
 import {useAppContext} from "@/context/AppContext";
 import useStatus from "@/hooks/useStatus";
 
+interface BreederFormData {
+    id: string;
+    nickname: string;
+    birth_date: string;
+}
+
 export const BreedersPage = () => {
     const {isOpen, onOpen, onOpenChange} = useDisclosure();
-    const {handleSubmit, control, formState: {isValid}, reset} = useForm({
+    const {handleSubmit, control, formState: {isValid}, reset} = useForm<BreederFormData>({
         mode: 'onChange', // Validate the form on each change
     });
 
 
     const {loading, error, success, startLoading, setSuccessState, setErrorState, resetStatus} = useStatus()
-    const [showInactive, setShowInactive] = useState(false)
+    const {breeders} = useAppContext()
 
+    const [showInactive, setShowInactive] = useState(false)
     const [rows, setRows] = useState<Breeder[]>([])
-    const {breeders, user} = useAppContext()
 
     const breederList = Array.from(breeders.values())
 
@@ -54,23 +60,18 @@ export const BreedersPage = () => {
         }
 
         setRows(filteredItems)
-    }, [showInactive, breeders])
+    }, [showInactive, breederList])
 
 
-    const onSubmit = async (data) => {
+    const onSubmit = async (data: BreederFormData) => {
         startLoading()
-        data["status"] = "active";
-        console.log(data)
-
-        await addBreeder(user?.authUser?.uid, data)
-            .then(data => setSuccessState())
-            .catch(error => setErrorState(error))
+        addBreeder({...data, status: "active"} as Breeder)
+            .then(setSuccessState)
+            .catch(setErrorState)
             .finally(() => {
-                resetStatus();
                 reset();
                 onOpenChange();
             })
-
     }
 
     const TopContent = () => {
@@ -128,11 +129,11 @@ export const BreedersPage = () => {
                                     <DropdownMenu aria-label={"actions"}>
                                         {e.status === "active" ?
                                             <DropdownItem
-                                                onPress={() => updateBreederStatus(user?.authUser?.uid, e.doc, "inactive")}>
+                                                onPress={() => updateBreederStatus(e.doc, "inactive")}>
                                                 Fjern fra aktive veirar
                                             </DropdownItem> :
                                             <DropdownItem
-                                                onPress={() => updateBreederStatus(user?.authUser?.uid, e.doc, "active")}>
+                                                onPress={() => updateBreederStatus(e.doc, "active")}>
                                                 Legg til aktive veirar
                                             </DropdownItem>
                                         }
@@ -201,10 +202,10 @@ export const BreedersPage = () => {
             <NoticeWrapper>
                 <NoticeBox title={"Suksess"} message={"Ny veir lagt til"} type={"success"} visible={success}
                            onClose={resetStatus}/>
-                <NoticeBox title={"Feil"} message={error || "Noko gjekk gale"} type={"danger"} visible={error !== null}
+                <NoticeBox title={"Feil"} message={error?.message || "Noko gjekk gale"} type={"danger"}
+                           visible={error !== null}
                            onClose={resetStatus}/>
             </NoticeWrapper>
-
         </div>
     )
 }

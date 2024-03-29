@@ -1,7 +1,7 @@
 import {Controller, useForm} from "react-hook-form";
 import {Button, Card, Input, CardBody, CardHeader} from "@nextui-org/react";
 import {useAppContext} from "@/context/AppContext";
-import React, {useEffect} from "react";
+import {useEffect, useMemo} from "react";
 import {UserDetail} from "@/types/types";
 import {changeUserDetails} from "@/api/firestore/users";
 import useStatus from "@/hooks/useStatus";
@@ -20,13 +20,13 @@ const UserSettings = () => {
     const {user} = useAppContext()
     const {loading, error, success, setErrorState, setSuccessState, startLoading, resetStatus} = useStatus()
 
-    const defaultValues = {
+    const defaultValues = useMemo(() => ({
         firstname: user?.userDetail?.firstname,
         lastname: user?.userDetail?.lastname,
         birthdate: user?.userDetail?.birthdate,
         address: user?.userDetail?.address,
         prodno: user?.userDetail?.prodno
-    }
+    }), [user])
 
     const {handleSubmit, control, reset} = useForm<FormInput>({
         defaultValues: defaultValues
@@ -36,19 +36,16 @@ const UserSettings = () => {
         if (user) {
             reset(defaultValues);
         }
-    }, [user, reset]);
+    }, [user, reset, defaultValues]);
 
     const onSubmit = (data: FormInput) => {
         if (!user || !user.authUser) return;
         startLoading()
         const userDetail: UserDetail = {...data, email: user.userDetail?.email || ""}
 
-        changeUserDetails(user.authUser?.uid, userDetail)
+        changeUserDetails(userDetail)
             .then(() => setSuccessState())
             .catch(error => setErrorState(error.toString()))
-
-        resetStatus();
-        reset();
     }
     return (
         <>
@@ -119,9 +116,11 @@ const UserSettings = () => {
             </Card>
 
             <NoticeWrapper>
-                {success && <NoticeBox title={"Endringer lagret"} message={"Last siden på nytt for å se endringer"}
-                                       type={"success"} noTimeout={false}/>}
-                {error && <NoticeBox title={"En feil oppstod"} message={error} type={"danger"} noTimeout={false}/>}
+                <NoticeBox title={"Endringer lagret"} message={"Last siden på nytt for å se endringer"}
+                           type={"success"} visible={success} onClose={resetStatus}/>
+                <NoticeBox title={"Feil"} message={error?.toString() || "Noko gjekk gale"} type={"danger"}
+                           visible={error !== null}
+                           onClose={resetStatus}/>
             </NoticeWrapper>
         </>
     )

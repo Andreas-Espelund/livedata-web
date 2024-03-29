@@ -1,13 +1,22 @@
 import {Autocomplete, AutocompleteItem} from "@nextui-org/react";
-import React from "react";
+import {Key} from "react";
 
-export const DeactivationSelector = ({field, fieldState}) => {
+
+interface DeactivationSelectorProps {
+    value: string
+    onChange: (e: Key) => void
+    errorMessage?: string | undefined
+
+}
+
+export const DeactivationSelector = ({value, onChange, errorMessage}: DeactivationSelectorProps) => {
     return (
         <Autocomplete
-            value={field?.value}
-            onSelectionChange={(e) => field.onChange(e)}
-            defaultSelectedKey={field?.value}
+            value={value}
+            onSelectionChange={onChange}
+            defaultSelectedKey={value}
             label="Årsak"
+            errorMessage={errorMessage}
         >
             <AutocompleteItem key={"lost_in"}>
                 Tapt innmark

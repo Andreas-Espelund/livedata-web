@@ -1,24 +1,24 @@
-import React, {useContext} from "react";
 import {Autocomplete, AutocompleteItem} from "@nextui-org/react";
-import {Context} from "@/App";
 import {useAppContext} from "@/context/AppContext";
+import {Key, useMemo} from "react";
 
-
-export const BreederSelector = ({label, field, fieldState}: {
+interface BreederSelectorProps {
     label: string | undefined,
-    field: any,
-    fieldState: any,
-}) => {
+    value: string | null | undefined,
+    onChange: (e: Key) => void,
+    errorMessage?: string | undefined
+}
 
+export const BreederSelector = ({label, value, onChange, errorMessage}: BreederSelectorProps) => {
     const {breeders} = useAppContext()
-    const selectable = Array.from(breeders.values())
+    const selectable = useMemo(() => Array.from(breeders.values()), [breeders])
     return (
         <Autocomplete
             label={label || "Velg et individ"}
             placeholder={label ? "Velg et individ" : ""}
-            value={field?.value}
-            onSelectionChange={(e) => field.onChange(e)}
-            errorMessage={fieldState?.error?.message}
+            value={value ? value : ""}
+            onSelectionChange={onChange}
+            errorMessage={errorMessage}
         >
             {selectable.filter(e => e.status === "active").map(item =>
                 <AutocompleteItem

@@ -8,8 +8,6 @@ import {
 import {Controller, useForm} from "react-hook-form";
 import {Input} from "@nextui-org/input";
 
-import {useAppContext} from "@/context/AppContext";
-
 import {
     NoticeWrapper,
     NoticeBox
@@ -29,7 +27,6 @@ interface MedicineRegistryModalProps {
 
 const MedicineRegistryModal = ({isOpen, onClose}: MedicineRegistryModalProps) => {
 
-    const {user} = useAppContext()
     const {loading, error, success, startLoading, setSuccessState, setErrorState, resetStatus} = useStatus();
     const {control, handleSubmit} = useForm<MedicineRegistryData>({
         defaultValues: {
@@ -41,7 +38,7 @@ const MedicineRegistryModal = ({isOpen, onClose}: MedicineRegistryModalProps) =>
     const onSubmit = async (data: MedicineRegistryData) => {
         console.log(data)
         startLoading()
-        await addMedicineRegistry(user?.authUser?.uid || "", data.medicine)
+        await addMedicineRegistry(data.medicine)
             .then(setSuccessState)
             .catch(setErrorState)
     }

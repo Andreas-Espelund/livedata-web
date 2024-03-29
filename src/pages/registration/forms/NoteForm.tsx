@@ -4,7 +4,6 @@ import {IndividualSelector, Stack, Heading2, NoticeBox, NoticeWrapper, InfoPopov
 
 import {formatDate} from "@/util/utils";
 import {addNoteRecord} from "@/api/firestore/registrations";
-import {useAppContext} from "@/context/AppContext";
 import useStatus from "@/hooks/useStatus";
 import {yupResolver} from "@hookform/resolvers/yup";
 import {noteSchema} from "@/validation/noteValidation";
@@ -17,8 +16,6 @@ interface NoteFormData {
 }
 
 const NoteForm = () => {
-
-    const {user} = useAppContext()
     const {error, success, loading, setErrorState, setSuccessState, startLoading, resetStatus} = useStatus()
 
     const {handleSubmit, control} = useForm<NoteFormData>({
@@ -29,18 +26,10 @@ const NoteForm = () => {
     });
 
     const onSubmit = async (data: NoteFormData) => {
-        console.log(data)
         startLoading()
-        addNoteRecord(user?.authUser?.uid, data)
-            .then(() => {
-                    setSuccessState()
-                    console.log("Note added")
-                }
-            )
-            .catch(err => {
-                console.error(err)
-                setErrorState(err)
-            })
+        addNoteRecord(data)
+            .then(setSuccessState)
+            .catch(setErrorState)
     };
 
     return (

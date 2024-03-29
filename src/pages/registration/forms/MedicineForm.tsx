@@ -4,10 +4,10 @@ import {Heading2, IndividualSelector, InfoPopover, NoticeBox, NoticeWrapper} fro
 import {Controller, useForm} from "react-hook-form";
 import useStatus from "@/hooks/useStatus";
 import {addMedicineRecord} from "@/api/firestore/registrations";
-import {useAppContext} from "@/context/AppContext";
 import {formatDate} from "@/util/utils";
 import {yupResolver} from "@hookform/resolvers/yup";
 import {medicineSchema} from "@/validation/medicineValidation";
+import {MedicineSelector} from "@/components/MedicineSelector";
 
 
 interface MedicineFormData {
@@ -18,7 +18,6 @@ interface MedicineFormData {
 
 
 export const MedicineForm = () => {
-    const {user} = useAppContext()
     const {control, handleSubmit} = useForm<MedicineFormData>({
         resolver: yupResolver(medicineSchema),
         defaultValues: {
@@ -29,14 +28,10 @@ export const MedicineForm = () => {
     const {loading, error, success, startLoading, setSuccessState, setErrorState, resetStatus} = useStatus()
 
     const onSubmit = (data: MedicineFormData) => {
-        console.log(data)
         startLoading()
-        addMedicineRecord(user?.authUser?.uid, data)
+        addMedicineRecord(data)
             .then(setSuccessState)
-            .catch(error => {
-                console.error(error);
-                setErrorState(error)
-            })
+            .catch(setErrorState)
     }
 
     return (
@@ -70,8 +65,7 @@ export const MedicineForm = () => {
                             name="medicine"
                             control={control}
                             render={({field, fieldState}) =>
-                                <Input label={"Medisin"} {...field}
-                                       errorMessage={fieldState.error?.message} isRequired/>
+                                <MedicineSelector field={field} errorMessage={fieldState.error?.message}/>
                             }
                         />
                         <div className={"flex justify-end"}>
@@ -84,7 +78,8 @@ export const MedicineForm = () => {
             <NoticeWrapper>
                 <NoticeBox title={"Suksess"} message={"Medisinering registrert"} type={"success"} visible={success}
                            onClose={resetStatus}/>
-                <NoticeBox title={"Noko gjekk gale"} message={error} type={"danger"} visible={error !== null}
+                <NoticeBox title={"Noko gjekk gale"} message={error?.toString() || "Noko gjekk gale"} type={"danger"}
+                           visible={error !== null}
                            onClose={resetStatus}/>
             </NoticeWrapper>
         </>
