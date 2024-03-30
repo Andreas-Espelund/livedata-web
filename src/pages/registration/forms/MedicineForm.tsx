@@ -17,10 +17,11 @@ interface MedicineFormData {
 }
 
 
-export const MedicineForm = () => {
+export const MedicineForm = ({id}: { id: string }) => {
     const {control, handleSubmit} = useForm<MedicineFormData>({
         resolver: yupResolver(medicineSchema),
         defaultValues: {
+            individual: id,
             date: formatDate(new Date())
         }
     })

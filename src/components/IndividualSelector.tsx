@@ -13,12 +13,14 @@ export const IndividualSelector = ({label, field, fieldState, gender}: {
     const selectable = Array.from(individuals.values())
     const filtered = gender === undefined ? selectable : selectable.filter((ind) => ind.gender === gender)
 
+    console.log(field.value)
     return (
         <Autocomplete
             label={label || "Velg et individ"}
             placeholder={label ? "Velg et individ" : ""}
             onSelectionChange={field.onChange}
             errorMessage={fieldState?.error?.message}
+            defaultSelectedKey={field.value}
         >
             {filtered.map(item =>
                 <AutocompleteItem

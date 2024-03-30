@@ -49,7 +49,7 @@ interface BirthFormData {
     note?: string | undefined;
 }
 
-const BirthForm = () => {
+const BirthForm = ({id}: { id: string }) => {
 
     const {loading, startLoading, error, success, setSuccessState, setErrorState, resetStatus} = useStatus()
 
@@ -57,6 +57,7 @@ const BirthForm = () => {
     const {handleSubmit, getValues, control, reset} = useForm<BirthFormData>({
         resolver: yupResolver(birthSchema),
         defaultValues: {
+            mother: id,
             lambs: [{gender: "", bottle: "0", tag: ""}],
             date: formatDate(new Date()),
         },

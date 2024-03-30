@@ -15,12 +15,13 @@ interface NoteFormData {
     note: string;
 }
 
-const NoteForm = () => {
+const NoteForm = ({id}: { id: string }) => {
     const {error, success, loading, setErrorState, setSuccessState, startLoading, resetStatus} = useStatus()
 
     const {handleSubmit, control} = useForm<NoteFormData>({
         resolver: yupResolver(noteSchema),
         defaultValues: {
+            individual: id,
             date: formatDate(new Date()),
         }
     });

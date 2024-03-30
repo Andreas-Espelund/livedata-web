@@ -29,6 +29,7 @@ import ExportModal from "@/pages/individuals/Modals/ExportModal";
 import {BoltIcon, HeartIcon, PrinterIcon, WarningIcon} from "@/images/icons";
 import MassDeactivation from "@/pages/individuals/Modals/MassDeactivation";
 import MassMedicine from "@/pages/individuals/Modals/MedicineRegistrationModal";
+import QuickActions from "@/components/QuickActions";
 
 
 const columns = [
@@ -234,18 +235,11 @@ export const IndividualsPage = () => {
             case "actions":
                 return (
                     <div className="relative flex justify-end items-center gap-2">
-                        <Dropdown>
-                            <DropdownTrigger>
-                                <Button isIconOnly size="sm" variant="light">
-                                    <VerticalDotsIcon/>
-                                </Button>
-                            </DropdownTrigger>
-                            <DropdownMenu aria-label={"action menu"}>
-                                <DropdownItem href={`/individuals/${individual.id}`}>Detaljer</DropdownItem>
-                                <DropdownItem>Ny lambing</DropdownItem>
-                                <DropdownItem>Ny utmelding</DropdownItem>
-                            </DropdownMenu>
-                        </Dropdown>
+                        <QuickActions ind={individual} trigger={
+                            <Button isIconOnly size="sm" variant="light">
+                                <VerticalDotsIcon/>
+                            </Button>
+                        }/>
                     </div>
                 );
             case "father":

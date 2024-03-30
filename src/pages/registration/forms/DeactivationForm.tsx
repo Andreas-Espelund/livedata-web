@@ -26,13 +26,14 @@ interface DeactivationFormData {
 }
 
 
-const DeactivationForm = () => {
+const DeactivationForm = ({id}: { id: string }) => {
 
     const {loading, error, success, startLoading, setSuccessState, setErrorState, resetStatus} = useStatus()
 
     const {handleSubmit, control, reset} = useForm<DeactivationFormData>({
         resolver: yupResolver(deactivationSchema),
         defaultValues: {
+            individual: id,
             date: formatDate(new Date()),
             status: "slaught",
         }

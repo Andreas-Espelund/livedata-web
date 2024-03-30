@@ -7,38 +7,46 @@ import NoteForm from '@/pages/registration/forms/NoteForm';
 import {useAppContext} from "@/context/AppContext";
 import {MedicineForm} from "@/pages/registration/forms/MedicineForm";
 import {useEffect, useState} from "react";
+import {useParams} from "react-router-dom";
 
 const tabs = [
     {
         key: "create",
         label: "Innmelding",
-        element: <RegisterIndividualForm/>
+        element: RegisterIndividualForm
     },
     {
         key: "birth",
         label: "Lamming",
-        element: <BirthForm/>
+        element: BirthForm
     },
     {
         key: "delete",
         label: "Utmelding",
-        element: <DeactivationForm/>
+        element: DeactivationForm
     },
     {
         key: "note",
         label: "Notat",
-        element: <NoteForm/>
+        element: NoteForm
     },
     {
         key: "medicine",
         label: "Medisinering",
-        element: <MedicineForm/>
+        element: MedicineForm
     },
 ]
 export const RegistrationPage = () => {
+    const {id, tab} = useParams() as { id: string, tab: string }
     const {size} = useAppContext()
     const [selectedKey, setSelectedKey] = useState(localStorage.getItem("selected_tab") || tabs[0].key)
 
+
+    useEffect(() => {
+        if (tab) {
+            setSelectedKey(tab)
+        }
+    }, [tab]);
 
     // Update localStorage whenever selectedKey changes
     useEffect(() => {
@@ -89,7 +97,7 @@ export const RegistrationPage = () => {
             >
                 {tabs.map(item =>
                     <Tab key={item.key} title={item.label}>
-                        {item.element}
+                        <item.element id={id}/>
                     </Tab>
                 )}
             </Tabs>
