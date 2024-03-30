@@ -1,11 +1,13 @@
 import {Controller, useForm} from "react-hook-form";
-import {Button, Card, Input, CardBody, CardHeader} from "@nextui-org/react";
+import {Button, Card, CardBody, CardHeader, Input} from "@nextui-org/react";
 import {useAppContext} from "@/context/AppContext";
 import {useEffect, useMemo} from "react";
 import {UserDetail} from "@/types/types";
 import {changeUserDetails} from "@/api/firestore/users";
 import useStatus from "@/hooks/useStatus";
-import {NoticeWrapper, NoticeBox, Heading2} from "@/components";
+import {Heading2, NoticeBox, NoticeWrapper} from "@/components";
+import {yupResolver} from "@hookform/resolvers/yup";
+import {userSettingsSchema} from "@/validation/userSettingsValidation";
 
 
 interface FormInput {
@@ -29,6 +31,7 @@ const UserSettings = () => {
     }), [user])
 
     const {handleSubmit, control, reset} = useForm<FormInput>({
+        resolver: yupResolver(userSettingsSchema),
         defaultValues: defaultValues
     })
 
@@ -59,7 +62,6 @@ const UserSettings = () => {
                             <Controller
                                 name="firstname"
                                 control={control}
-                                rules={{required: "Skriv ditt navn"}} // Add more validation as needed
                                 render={({field, fieldState}) => (
                                     <Input errorMessage={fieldState.error?.message} {...field} label="Fornavn"/>
                                 )}
@@ -67,7 +69,6 @@ const UserSettings = () => {
                             <Controller
                                 name="lastname"
                                 control={control}
-                                rules={{required: "Skriv ditt navn"}} // Add more validation as needed
                                 render={({field, fieldState}) => (
                                     <Input errorMessage={fieldState.error?.message} {...field} label="Etternavn"/>
                                 )}
@@ -77,7 +78,6 @@ const UserSettings = () => {
                         <Controller
                             name="birthdate"
                             control={control}
-                            rules={{required: "Skriv din fødselsdato"}} // Add more validation as needed
                             render={({field, fieldState}) => (
                                 <Input errorMessage={fieldState.error?.message} type={"date"} {...field}
                                        label={"Fødselsdato"} placeholder=" "/>
@@ -87,7 +87,6 @@ const UserSettings = () => {
                         <Controller
                             name="address"
                             control={control}
-                            rules={{required: "Skriv din adresse"}} // Add more validation as needed
                             render={({field, fieldState}) => (
                                 <Input errorMessage={fieldState.error?.message} {...field} label={"Adresse"}/>
                             )}
@@ -96,13 +95,6 @@ const UserSettings = () => {
                         <Controller
                             name="prodno"
                             control={control}
-                            rules={{
-                                required: "Skriv ditt produsentnummer",
-                                pattern: {
-                                    value: /^\d{10}$/,
-                                    message: "Produsentnummeret må være et 10-sifret tall"
-                                }
-                            }}
                             render={({field, fieldState}) => (
                                 <Input errorMessage={fieldState.error?.message}  {...field} label={"Produsentnummer"}/>
                             )}

@@ -1,23 +1,15 @@
-import {
-    Button,
-    Modal,
-    ModalBody,
-    ModalContent,
-    ModalHeader,
-} from '@nextui-org/react';
-import {Controller, useForm} from "react-hook-form";
-import {Input} from "@nextui-org/input";
+import {Button, Input, Modal, ModalBody, ModalContent, ModalHeader} from '@nextui-org/react';
 
-import {
-    NoticeWrapper,
-    NoticeBox
-} from '@/components'
+import {NoticeBox, NoticeWrapper} from '@/components'
+import {Controller, useForm} from "react-hook-form";
 import {addMedicineRegistry} from "@/api/firestore/medicineRegistry";
 import useStatus from "@/hooks/useStatus";
+import {yupResolver} from "@hookform/resolvers/yup";
+import {medicineRegistrySchema} from "@/validation/medicineRegistryValidation";
 
 
 interface MedicineRegistryData {
-    medicine: string;
+    name: string;
 }
 
 interface MedicineRegistryModalProps {
@@ -29,23 +21,20 @@ const MedicineRegistryModal = ({isOpen, onClose}: MedicineRegistryModalProps) =>
 
     const {loading, error, success, startLoading, setSuccessState, setErrorState, resetStatus} = useStatus();
     const {control, handleSubmit} = useForm<MedicineRegistryData>({
-        defaultValues: {
-            medicine: ""
-        }
+        resolver: yupResolver(medicineRegistrySchema),
     });
 
 
     const onSubmit = async (data: MedicineRegistryData) => {
         console.log(data)
         startLoading()
-        await addMedicineRegistry(data.medicine)
+        await addMedicineRegistry(data.name)
             .then(setSuccessState)
             .catch(setErrorState)
     }
 
     return (
         <>
-
             <Modal isOpen={isOpen} onClose={onClose} isDismissable={false}>
                 <ModalContent>
                     <ModalHeader>
@@ -56,7 +45,7 @@ const MedicineRegistryModal = ({isOpen, onClose}: MedicineRegistryModalProps) =>
                             <div className={"flex flex-col gap-4 items-center justify-center mb-2"}>
                                 <Controller
                                     control={control}
-                                    name={"medicine"}
+                                    name={"name"}
                                     render={({field, fieldState}) =>
                                         <Input
                                             {...field}
@@ -70,8 +59,7 @@ const MedicineRegistryModal = ({isOpen, onClose}: MedicineRegistryModalProps) =>
                                     <Button color={"danger"} variant={"bordered"} onPress={onClose}>
                                         Avbryt
                                     </Button>
-                                    <Button color={"primary"} type={"submit"}
-                                            isLoading={loading}>
+                                    <Button color={"primary"} type={"submit"} isLoading={loading}>
                                         Ok
                                     </Button>
                                 </div>

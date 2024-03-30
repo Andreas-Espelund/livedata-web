@@ -5,9 +5,11 @@ import {NoticeWrapper} from "@/components";
 import {NoticeBox} from "@/components/NoticeBox";
 import {sendFeedback} from "@/api/firestore/users";
 import {formatDate} from "@/util/utils";
+import {feedbackSchema} from "@/validation/feedbackValidation";
+import {yupResolver} from "@hookform/resolvers/yup";
 
 
-interface FormData {
+interface FeedbackFormData {
     name: string;
     subject: string;
     message: string;
@@ -18,11 +20,11 @@ interface FormData {
 export const Feedbackform = () => {
 
     const {loading, error, success, setSuccessState, setErrorState, startLoading, resetStatus} = useStatus()
-    const {control, handleSubmit, formState} = useForm<FormData>({
-        mode: "onChange"
+    const {control, handleSubmit, formState} = useForm<FeedbackFormData>({
+        resolver: yupResolver(feedbackSchema)
     })
 
-    const onSubmit = async (data: FormData) => {
+    const onSubmit = async (data: FeedbackFormData) => {
         data.date = formatDate(new Date())
         startLoading()
         sendFeedback(data)
@@ -37,7 +39,6 @@ export const Feedbackform = () => {
                         <Controller
                             name={"name"}
                             control={control}
-                            rules={{required: "Skriv ditt navn"}}
                             render={({field, fieldState}) =>
                                 <Input {...field} errorMessage={fieldState.error?.message} label={"Navn"} isRequired/>
                             }
@@ -45,7 +46,6 @@ export const Feedbackform = () => {
                         <Controller
                             name={"subject"}
                             control={control}
-                            rules={{required: "Hva gjelder tilbakemeldingen (kort)"}}
                             render={({field, fieldState}) =>
                                 <Input {...field} errorMessage={fieldState.error?.message} label={"Emne"} isRequired/>
                             }
@@ -53,7 +53,6 @@ export const Feedbackform = () => {
                         <Controller
                             name={"message"}
                             control={control}
-                            rules={{required: "Skriv din tilbakemelding"}}
                             render={({field, fieldState}) =>
                                 <Textarea minRows={6} {...field} errorMessage={fieldState.error?.message}
                                           label={"Melding"} isRequired/>

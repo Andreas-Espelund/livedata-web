@@ -32,12 +32,12 @@ export const InfoPage = () => {
 
     const faq = [
         {
-            question: "Hva koster dette da?",
-            answer: "Ikkje en drit"
+            question: "Kven kan bruke dette?",
+            answer: "Dette verktøyet er lager for sauebønder, men kan brukes av alle som har behov for å holde oversikt over dyr og helse."
         },
         {
-            question: "Hva koster dette da?",
-            answer: "Ikkje en drit"
+            question: "Kva koster det?",
+            answer: "Foreløpig er dette gratis og fortsatt veldig i utviklingsfasen"
         }
     ]
 
@@ -66,6 +66,7 @@ export const InfoPage = () => {
             <Card>
                 <CardHeader className={"text-xl font-medium"}> Kjeder du deg? </CardHeader>
                 <CardBody>
+                    
                     <Link className={"text-blue-400"} target={"_blank"}
                           href="https://github.com/Andreas-Espelund/livedata-web"> Sjekk ut
                         på

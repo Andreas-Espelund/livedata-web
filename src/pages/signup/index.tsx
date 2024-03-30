@@ -1,7 +1,7 @@
-import {useForm, Controller} from 'react-hook-form';
+import {Controller, useForm} from 'react-hook-form';
 import {createUserWithEmailAndPassword} from 'firebase/auth';
 import {auth} from '@/api/firebase.js';
-import {Input, Button, Card, Divider} from '@nextui-org/react';
+import {Button, Card, Divider, Input} from '@nextui-org/react';
 import {CardBody} from "@nextui-org/card";
 import {Navigate, NavLink} from "react-router-dom";
 
@@ -10,32 +10,34 @@ import {addUserDetails} from "@/api/firestore/users";
 import {UserDetail} from "@/types/types";
 import useStatus from "@/hooks/useStatus";
 import {NoticeBox, NoticeWrapper} from "@/components";
+import {yupResolver} from "@hookform/resolvers/yup";
+import {signupSchema} from "@/validation/signupValidation";
 
 
-interface FormInput {
+interface SignupFormData {
     firstname: string;
     lastname: string;
     birthdate: string;
-    address: string;
+    address: string
     prodno: string;
     email: string;
     password: string;
-    verify: string;
+    validation: string;
 }
 
 
 export const SignUpPage = () => {
 
     const {success, error, loading, setSuccessState, setErrorState, startLoading, resetStatus} = useStatus()
-    const {control, handleSubmit, formState: {errors}} = useForm<FormInput>({
-        reValidateMode: "onChange"
+    const {control, handleSubmit} = useForm<SignupFormData>({
+        resolver: yupResolver(signupSchema)
     });
     const {user} = useAppContext()
-    const onSubmit = async (data: FormInput) => {
+    const onSubmit = async (data: SignupFormData) => {
         startLoading()
-        const {email, password, verify} = data;
-        console.log(email, password, verify)
-        if (password !== verify) {
+        const {email, password, validation} = data;
+        console.log(email, password, validation)
+        if (password !== validation) {
             alert("Passwords do not match");
             resetStatus()
             return;
@@ -73,7 +75,6 @@ export const SignUpPage = () => {
                             <Controller
                                 name="firstname"
                                 control={control}
-                                rules={{required: "Skriv ditt navn"}} // Add more validation as needed
                                 render={({field, fieldState}) => (
                                     <Input errorMessage={fieldState.error?.message} {...field} label="Fornavn"
                                            isRequired/>
@@ -82,7 +83,6 @@ export const SignUpPage = () => {
                             <Controller
                                 name="lastname"
                                 control={control}
-                                rules={{required: "Skriv ditt navn"}} // Add more validation as needed
                                 render={({field, fieldState}) => (
                                     <Input errorMessage={fieldState.error?.message} {...field} label="Etternavn"
                                            isRequired/>
@@ -93,7 +93,6 @@ export const SignUpPage = () => {
                         <Controller
                             name="birthdate"
                             control={control}
-                            rules={{required: "Skriv din fødselsdato"}} // Add more validation as needed
                             render={({field, fieldState}) => (
                                 <Input errorMessage={fieldState.error?.message} type={"date"} {...field}
                                        label={"Fødselsdato"} placeholder=" " isRequired/>
@@ -103,7 +102,6 @@ export const SignUpPage = () => {
                         <Controller
                             name="address"
                             control={control}
-                            rules={{required: "Skriv din adresse"}} // Add more validation as needed
                             render={({field, fieldState}) => (
                                 <Input errorMessage={fieldState.error?.message} {...field} label={"Adresse"}
                                        isRequired/>
@@ -113,13 +111,6 @@ export const SignUpPage = () => {
                         <Controller
                             name="prodno"
                             control={control}
-                            rules={{
-                                required: "Skriv ditt produsentnummer",
-                                pattern: {
-                                    value: /^\d{10}$/,
-                                    message: "Produsentnummeret må være et 10-sifret tall"
-                                }
-                            }}
                             render={({field, fieldState}) => (
                                 <Input errorMessage={fieldState.error?.message}  {...field} label={"Produsentnummer"}
                                        isRequired/>
@@ -131,31 +122,25 @@ export const SignUpPage = () => {
                         <Controller
                             name="email"
                             control={control}
-                            rules={{required: true}} // Add more validation as needed
-                            render={({field}) => (
-                                <Input errorMessage={errors.email && "Påkrevd"} type="email" {...field} label="Epost"
+                            render={({field, fieldState}) => (
+                                <Input errorMessage={fieldState.error?.message} type="email" {...field} label="Epost"
                                        isRequired/>
                             )}
                         />
                         <Controller
                             name="password"
                             control={control}
-                            rules={{required: true}} // Add more validation as needed
-                            render={({field}) => (
-                                <Input errorMessage={errors.password && "Påkrevd"} type="password" {...field}
+                            render={({field, fieldState}) => (
+                                <Input errorMessage={fieldState.error?.message} type="password" {...field}
                                        label="Passord" isRequired/>
                             )}
                         />
                         <Controller
-                            name="verify"
+                            name="validation"
                             control={control}
-                            rules={{
-                                required: "Please confirm your password",
-                                validate: value => value === control._getWatch("password") || "Passwords do not match"
-                            }}
-                            render={({field}) => (
-                                <Input errorMessage={errors.verify?.message} type="password" {...field}
-                                       label="Gjenta passord" isRequired color={errors.verify ? "danger" : undefined}/>
+                            render={({field, fieldState}) => (
+                                <Input errorMessage={fieldState.error?.message} type="password" {...field}
+                                       label="Gjenta passord" isRequired/>
                             )}
                         />
                         <Button type="submit" color={"primary"} isLoading={loading}>Lag bruker</Button>

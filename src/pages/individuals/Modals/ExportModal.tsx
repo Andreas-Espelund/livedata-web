@@ -1,17 +1,14 @@
 // MedicineRegistrationModal.tsx
-import {
-    Button,
-    Selection
-} from '@nextui-org/react';
+import {Button, Selection} from '@nextui-org/react';
 import {Controller, useForm} from "react-hook-form";
 import {Input} from "@nextui-org/input";
 
 import {Individual} from "@/types/types";
-
-
 import {useAppContext} from "@/context/AppContext";
 
 import {generatePdf} from "@/util/GeneratePDF";
+import {yupResolver} from "@hookform/resolvers/yup";
+import {exportSchema} from "@/validation/exportValidation";
 
 interface ExportModalProps {
     items: Individual[];
@@ -26,7 +23,9 @@ interface FormData {
 const ExportModal = ({items, selectedCols}: ExportModalProps) => {
 
     const {individuals, breeders} = useAppContext()
-    const {handleSubmit, control} = useForm<FormData>();
+    const {handleSubmit, control} = useForm<FormData>({
+        resolver: yupResolver(exportSchema)
+    });
 
     const onSubmit = async (data: FormData) => {
 
@@ -47,7 +46,6 @@ const ExportModal = ({items, selectedCols}: ExportModalProps) => {
             <Controller
                 name="title"
                 control={control}
-                rules={{required: "Skriv tittel"}}
                 render={({field, fieldState}) =>
                     <Input label={"Tittel"} {...field} errorMessage={fieldState.error?.message}
                            isRequired/>}

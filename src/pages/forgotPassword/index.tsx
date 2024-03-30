@@ -1,5 +1,5 @@
 import {Button, Card, CardBody, Input} from "@nextui-org/react";
-import {NoticeWrapper, NoticeBox} from "@/components";
+import {NoticeBox, NoticeWrapper} from "@/components";
 
 import {Controller, useForm} from "react-hook-form";
 
@@ -7,6 +7,8 @@ import {auth} from "@/api/firebase";
 import {sendPasswordResetEmail} from "firebase/auth";
 import {NavLink} from "react-router-dom";
 import useStatus from "@/hooks/useStatus";
+import {yupResolver} from "@hookform/resolvers/yup";
+import {forgotSchema} from "@/validation/forgotValidation";
 
 
 interface ForgotFormData {
@@ -14,8 +16,12 @@ interface ForgotFormData {
 }
 
 export const ForgotPage = () => {
-    const {control, handleSubmit} = useForm<ForgotFormData>();
+
     const {success, error, loading, setSuccessState, startLoading, setErrorState, resetStatus} = useStatus()
+
+    const {control, handleSubmit} = useForm<ForgotFormData>({
+        resolver: yupResolver(forgotSchema)
+    });
 
     const handleResetPassword = (data: ForgotFormData) => {
         startLoading()
@@ -33,15 +39,12 @@ export const ForgotPage = () => {
                     <form onSubmit={handleSubmit(handleResetPassword)} className={"grid gap-4"}>
                         <Controller
                             name="email"
-                            defaultValue={""}
                             control={control}
-                            rules={{required: "Skriv inn epost"}} // Add more validation as needed
                             render={({field, fieldState}) => (
                                 <Input errorMessage={fieldState.error?.message} type="email" {...field} label="Epost"
                                        isRequired/>
                             )}
                         />
-
                         <Button isLoading={loading} type="submit" color={"primary"}>Send</Button>
                     </form>
                 </CardBody>

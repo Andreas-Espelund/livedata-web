@@ -1,4 +1,4 @@
-import {Input, Button, Card} from '@nextui-org/react';
+import {Button, Card, Input} from '@nextui-org/react';
 import {CardBody} from "@nextui-org/card";
 import {Navigate, NavLink, useNavigate} from "react-router-dom";
 import {NoticeBox} from "@/components/NoticeBox";
@@ -8,6 +8,8 @@ import {NoticeWrapper} from "@/components";
 import {Controller, useForm} from "react-hook-form";
 import {signInWithEmailAndPassword} from 'firebase/auth';
 import {auth} from "@/api/firebase";
+import {yupResolver} from "@hookform/resolvers/yup";
+import {loginSchema} from "@/validation/loginValidation";
 
 
 interface LoginFormData {
@@ -18,7 +20,9 @@ interface LoginFormData {
 
 export const LoginPage = () => {
     const {loading, error, success, setSuccessState, setErrorState, startLoading, resetStatus} = useStatus()
-    const {control, handleSubmit, formState: {errors}} = useForm<LoginFormData>();
+    const {control, handleSubmit, formState: {errors}} = useForm<LoginFormData>({
+        resolver: yupResolver(loginSchema)
+    });
 
     const navigate = useNavigate()
     const {user} = useAppContext()
@@ -47,7 +51,6 @@ export const LoginPage = () => {
                         <Controller
                             name="email"
                             control={control}
-                            rules={{required: true}} // Add more validation as needed
                             render={({field}) => (
                                 <Input errorMessage={errors.email && "Påkrevd"} type="email" {...field} label="Epost"
                                        isRequired/>
@@ -56,7 +59,6 @@ export const LoginPage = () => {
                         <Controller
                             name="password"
                             control={control}
-                            rules={{required: true}} // Add more validation as needed
                             render={({field}) => (
                                 <Input errorMessage={errors.password && "Påkrevd"} type="password" {...field}
                                        label="Passord" isRequired/>

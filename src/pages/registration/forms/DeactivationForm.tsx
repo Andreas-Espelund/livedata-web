@@ -6,15 +6,15 @@ import {deactivationSchema} from "@/validation/deactivationValidation";
 import {updateIndividualStatus} from "@/api/firestore/individuals";
 
 
-import {Button, Textarea, Input, Card, CardBody, CardHeader} from "@nextui-org/react";
+import {Button, Card, CardBody, CardHeader, Input, Textarea} from "@nextui-org/react";
 import {
-    IndividualSelector,
-    Stack,
+    DeactivationSelector,
     Heading2,
+    IndividualSelector,
+    InfoPopover,
     NoticeBox,
     NoticeWrapper,
-    InfoPopover,
-    DeactivationSelector
+    Stack
 } from "@/components";
 import {formatDate} from "@/util/utils";
 
@@ -32,7 +32,6 @@ const DeactivationForm = () => {
 
     const {handleSubmit, control, reset} = useForm<DeactivationFormData>({
         resolver: yupResolver(deactivationSchema),
-        mode: 'onChange',
         defaultValues: {
             date: formatDate(new Date()),
             status: "slaught",

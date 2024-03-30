@@ -1,4 +1,4 @@
-import {useEffect, useState} from "react";
+import {useMemo, useState} from "react";
 
 import {
     Button,
@@ -8,11 +8,6 @@ import {
     DropdownItem,
     DropdownMenu,
     DropdownTrigger,
-    Input,
-    Modal,
-    ModalBody,
-    ModalContent,
-    ModalHeader,
     Table,
     TableBody,
     TableCell,
@@ -23,56 +18,25 @@ import {
 } from "@nextui-org/react";
 
 import {Heading1} from "@/components/Headings";
-import {Controller, useForm} from "react-hook-form";
 
 import {PlusIcon, VerticalDotsIcon} from "@/images/icons";
-import {Breeder} from "@/types/types";
-import {addBreeder, updateBreederStatus} from "@/api/firestore/breeders";
-import {NoticeBox, NoticeWrapper} from "@/components/";
+import {updateBreederStatus} from "@/api/firestore/breeders";
 import {useAppContext} from "@/context/AppContext";
-import useStatus from "@/hooks/useStatus";
+import NewBreederModal from "@/pages/breeders/NewBreederModal";
 
-interface BreederFormData {
-    id: string;
-    nickname: string;
-    birth_date: string;
-}
 
 export const BreedersPage = () => {
     const {isOpen, onOpen, onOpenChange} = useDisclosure();
-    const {handleSubmit, control, formState: {isValid}, reset} = useForm<BreederFormData>({
-        mode: 'onChange', // Validate the form on each change
-    });
 
-
-    const {loading, error, success, startLoading, setSuccessState, setErrorState, resetStatus} = useStatus()
     const {breeders} = useAppContext()
-
     const [showInactive, setShowInactive] = useState(false)
-    const [rows, setRows] = useState<Breeder[]>([])
 
     const breederList = Array.from(breeders.values())
 
-    useEffect(() => {
-        let filteredItems = breederList
-        if (!showInactive) {
-            filteredItems = filteredItems.filter(item => item.status == "active")
-        }
-
-        setRows(filteredItems)
+    const filteredItems = useMemo(() => {
+        return showInactive ? breederList : breederList.filter(item => item.status === "active")
     }, [showInactive, breederList])
 
-
-    const onSubmit = async (data: BreederFormData) => {
-        startLoading()
-        addBreeder({...data, status: "active"} as Breeder)
-            .then(setSuccessState)
-            .catch(setErrorState)
-            .finally(() => {
-                reset();
-                onOpenChange();
-            })
-    }
 
     const TopContent = () => {
         return (
@@ -98,7 +62,7 @@ export const BreedersPage = () => {
                 topContentPlacement={"outside"}
                 topContent={<TopContent/>}
                 bottomContent={<p
-                    className={"text-small text-default-400 p-2"}>{`Viser ${rows.length} av ${breederList.length} veirar`}</p>}
+                    className={"text-small text-default-400 p-2"}>{`Viser ${filteredItems.length} av ${breederList.length} veirar`}</p>}
                 bottomContentPlacement={"outside"}
             >
                 <TableHeader>
@@ -109,7 +73,7 @@ export const BreedersPage = () => {
                     <TableColumn> VALG </TableColumn>
                 </TableHeader>
                 <TableBody emptyContent={"Ingen veirar registrert"}>
-                    {rows.map(e =>
+                    {filteredItems.map(e =>
                         <TableRow key={e.id}>
                             <TableCell>{e.id}</TableCell>
                             <TableCell>{e.nickname}</TableCell>
@@ -145,67 +109,7 @@ export const BreedersPage = () => {
                 </TableBody>
             </Table>
 
-            <Modal isOpen={isOpen} onOpenChange={onOpenChange}>
-                <ModalContent>
-                    {(onClose) => (
-                        <>
-                            <ModalHeader className="flex flex-col gap-1">Registrer ny veir</ModalHeader>
-                            <ModalBody>
-                                <form onSubmit={handleSubmit(onSubmit)} className={"grid gap-6"}>
-                                    <Controller
-                                        control={control}
-                                        name={"id"}
-                                        defaultValue={""}
-                                        rules={{
-                                            required: "ID mangler",
-                                            pattern: {
-                                                value: /^\d{5}$/,
-                                                message: "ID må være 5-sifret tall"
-                                            }
-                                        }}
-                                        render={({field}) => (<Input {...field} label={"ID (Øremerke)"}/>)}
-                                    />
-
-                                    <Controller
-                                        control={control}
-                                        name={"nickname"}
-                                        defaultValue={""}
-                                        rules={{required: "Skriv inn et kallenavn"}}
-                                        render={({field}) => (<Input {...field} label={"Kallenavn"}/>)}
-                                    />
-
-                                    <Controller
-                                        control={control}
-                                        name={"birth_date"}
-                                        defaultValue={""}
-                                        rules={{required: "Skriv inn en dato"}}
-                                        render={({field}) => (
-                                            <Input placeholder=" " label="Fødselsdato" {...field} type={"date"}/>)}
-                                    />
-
-
-                                    <div className={"flex justify-end gap-4 pb-2"}>
-                                        <Button color="danger" variant="light" onPress={onClose}>
-                                            Lukk
-                                        </Button>
-                                        <Button color="primary" type="submit" isLoading={loading} isDisabled={!isValid}>
-                                            Registrer
-                                        </Button>
-                                    </div>
-                                </form>
-                            </ModalBody>
-                        </>
-                    )}
-                </ModalContent>
-            </Modal>
-
-            <NoticeWrapper>
-                <NoticeBox title={"Suksess"} message={"Ny veir lagt til"} type={"success"} visible={success}
-                           onClose={resetStatus}/>
-                <NoticeBox title={"Feil"} message={error?.message || "Noko gjekk gale"} type={"danger"}
-                           visible={error !== null}
-                           onClose={resetStatus}/>
-            </NoticeWrapper>
+            <NewBreederModal isOpen={isOpen} onOpenChange={onOpenChange}/>
         </div>
     )
 }
