@@ -9,7 +9,6 @@ const QuickActions = ({ind, trigger}: { ind: Individual, trigger: React.ReactEle
         key: string,
         label: string,
         icon: React.FC<React.SVGProps<SVGSVGElement>>,
-        color: "danger" | "success" | "warning" | "secondary" | "default" | "primary"
     }
 
     const links: Link[] = [
@@ -17,7 +16,6 @@ const QuickActions = ({ind, trigger}: { ind: Individual, trigger: React.ReactEle
             key: "birth",
             label: "Lamming",
             icon: PlusIcon,
-            color: "success"
 
         },
 
@@ -25,19 +23,16 @@ const QuickActions = ({ind, trigger}: { ind: Individual, trigger: React.ReactEle
             key: "note",
             label: "Notat",
             icon: InfoIcon,
-            color: "warning"
         },
         {
             key: "medicine",
             label: "Medisinering",
             icon: HeartIcon,
-            color: "secondary"
         },
         {
             key: "delete",
             label: "Utmelding",
             icon: XIcon,
-            color: "danger"
         },
     ]
 
@@ -49,7 +44,7 @@ const QuickActions = ({ind, trigger}: { ind: Individual, trigger: React.ReactEle
 
             <DropdownMenu>
                 {links.map((link) =>
-                    <DropdownItem color={link.color} key={link.label}>
+                    <DropdownItem key={link.label}>
                         <NavLink to={`/register/${ind.doc}/${link.key}`}
                                  className={`flex items-center gap-2`}>
                             <link.icon/>

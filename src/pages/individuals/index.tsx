@@ -439,11 +439,9 @@ export const IndividualsPage = () => {
                                 aria-label={"pagination selection"}
                                 disallowEmptySelection
                             >
-                                <DropdownItem key="5">5</DropdownItem>
-                                <DropdownItem key="10">10</DropdownItem>
-                                <DropdownItem key="25">25</DropdownItem>
-                                <DropdownItem key="50">50</DropdownItem>
-                                <DropdownItem key="100">100</DropdownItem>
+                                {Array.of(5, 10, 25, 50, 100).map((value) =>
+                                    <DropdownItem key={value}>{value}</DropdownItem>
+                                )}
                             </DropdownMenu>
                         </Dropdown>
                     </label>

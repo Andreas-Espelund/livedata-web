@@ -3,7 +3,11 @@ import {useAppContext} from "@/context/AppContext";
 import {
     CardBody,
     CardHeader,
-    Card, Tabs, Tab, Button
+    Card,
+    Tabs,
+    Tab,
+    Button,
+    SelectItem, Select
 } from "@nextui-org/react";
 import {Heading1, Heading2} from "@/components";
 import {BoltIcon, CakeIcon, ChevronLeft} from "@/images/icons";
@@ -11,21 +15,75 @@ import ProfileSkeleton from "@/components/ProfileSkeleton";
 import ChipRow from "@/components/ChipRow";
 
 import QuickActions from "@/components/QuickActions";
+import {getBirthRecords} from "@/api/firestore/registrations";
+import {useEffect, useState} from "react";
+import {BirthRecord} from "@/types/types";
 
 
 const IndividualProfile = () => {
     const {id} = useParams<{ id: string }>();
-    const {getIndividualFromID, individuals, breeders} = useAppContext()
+    const {getIndividualFromID, individuals, breeders} = useAppContext();
 
-    const individual = id ? getIndividualFromID(id) : null
+    const [birthRecords, setBirthRecords] = useState<Map<string, BirthRecord>>(new Map());
 
-    if (!individual) return <ProfileSkeleton/>
+    const [selectedYear, setSelectedYear] = useState<string>();
+
+    const individual = id ? getIndividualFromID(id) : null;
+    const age = individual ? new Date().getFullYear() - parseInt(individual.birth_date.substring(0, 4)) : 0;
+    const lambs = Array.from(individuals.values()).filter((ind) => ind.mother === individual?.doc);
+
+    const currentBirthRecord = birthRecords.get(selectedYear || "");
+    useEffect(() => {
+        if (individual?.doc) {
+            getBirthRecords(individual.doc).then((records) => {
+                const map = new Map<string, BirthRecord>();
+                records.forEach((record) => {
+                    map.set(record.date.substring(0, 4), record);
+                });
+                setBirthRecords(map);
+                // Set the highest year
+                const years = Array.from(map.keys()).sort((a, b) => parseInt(b) - parseInt(a));
+                setSelectedYear(years[0]);
+            });
+        }
+    }, [individual?.doc]);
+
+    if (!individual) return <ProfileSkeleton/>;
 
 
-    const age = new Date().getFullYear() - new Date(individual.birth_date).getFullYear();
+    const BirthDetails = ({record}: { record: BirthRecord }) => {
+        return (
+            <Card key={record.date} className={"border"} shadow={"none"}>
+                <CardBody>
 
-
-    const lambs = Array.from(individuals.values()).filter(ind => ind.mother === individual.doc);
+                    <table>
+                        <tbody>
+                        <tr className={""}>
+                            <td className={"font-semibold"}>Mor:</td>
+                            <td>{individuals.get(record.mother)?.id}</td>
+                        </tr>
+                        <tr>
+                            <td className={"font-semibold"}>Far:</td>
+                            <td>{breeders.get(record.father)?.id}</td>
+                        </tr>
+                        <tr>
+                            <td className={"font-semibold"}>Lam:</td>
+                            <td>{record.lambs.join(", ")}</td>
+                        </tr>
+                        <tr>
+                            <td className={"font-semibold"}>Dato:</td>
+                            <td>{record.date}</td>
+                        </tr>
+                        <tr>
+                            <td className={"font-semibold"}>Kommentar:</td>
+                            <td>{record.note || "Ingen"}</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </CardBody>
+            </Card>
+        )
+    }
 
 
     return (
@@ -44,7 +102,7 @@ const IndividualProfile = () => {
                 <QuickActions ind={individual} trigger={
                     <Button startContent={<BoltIcon/>} variant={"shadow"} size={"lg"} color={"warning"}
                             className={"text-white"}>
-                        Ny Registrering
+                        Registrering
                     </Button>
                 }/>
 
@@ -134,8 +192,22 @@ const IndividualProfile = () => {
                             <CardHeader>
                                 <Heading2>Lamminger</Heading2>
                             </CardHeader>
-                            <CardBody>
-                                todo
+                            <CardBody className={"flex flex-col gap-4"}>
+                                <Select label="Sesong" id="test" selectedKeys={selectedYear ? [selectedYear] : []}
+                                        selectionMode="single"
+                                        onSelectionChange={(selection) => {
+                                            const newYear = Array.from(selection)[0];
+                                            if (newYear) {
+                                                setSelectedYear(newYear.toString());
+                                            }
+                                        }}>
+                                    {Array.from(birthRecords.keys()).map((key) =>
+                                        <SelectItem key={key} title={key}/>
+                                    )}
+
+                                </Select>
+                                {currentBirthRecord && <BirthDetails record={currentBirthRecord}/>}
+
                             </CardBody>
                         </Card>
                     </Tab>
